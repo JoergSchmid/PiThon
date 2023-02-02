@@ -25,5 +25,11 @@ def hello():
     return last_ten
 
 
+@app.route("/pi_reset")
+def reset():
+    open("pi.txt", "w").truncate()
+    return "reset"
+
+
 if __name__ == "__main__":
     app.run()
