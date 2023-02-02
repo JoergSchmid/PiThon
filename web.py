@@ -1,0 +1,14 @@
+import math
+
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def hello():
+    return f"Pi = {math.pi}"
+
+
+if __name__ == "__main__":
+    app.run()
