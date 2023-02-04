@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 
 @app.route('/pi')
-def hello():
+def pi():
     index = request.args.get("index")
     if index is None:
         with open("pi.txt", "a+") as f:
