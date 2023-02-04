@@ -1,6 +1,4 @@
 import mpmath
-
-
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -25,6 +23,8 @@ def hello():
             return pi[-12:-2]
     else:
         try:  # index might be invalid
+            if int(index) < 0:
+                return "error: index too small"
             if int(index) == 0:  # Special case for first digit before "."
                 return "3"
             mpmath.mp.dps = int(index) + 2
