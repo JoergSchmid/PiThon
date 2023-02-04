@@ -28,7 +28,7 @@ def hello():
             if int(index) == 0:  # Special case for first digit before "."
                 return "3"
             mpmath.mp.dps = int(index) + 2
-            return str(mpmath.pi)[-2:-1]
+            return str(mpmath.pi)[-2]
         except ValueError:
             return "error: invalid index"
 
