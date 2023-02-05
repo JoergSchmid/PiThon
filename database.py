@@ -63,10 +63,8 @@ def create_user_table():
 
 def create_test_users(c, conn):
     # 2 predefined users: "joerg" and "felix"
-    c.execute("SELECT * FROM user WHERE username=:username", {'username': 'joerg'})
-    if c.fetchone() is None:
+    c.execute("SELECT COUNT(*) FROM user")
+    if c.fetchone()[0] == 0:
         create_user(conn, "joerg")
-    c.execute("SELECT current_index FROM user WHERE username=:username", {'username': 'felix'})
-    if c.fetchone() is None:
         create_user(conn, "felix")
     conn.commit()
