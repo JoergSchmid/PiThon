@@ -1,5 +1,8 @@
+import os
 import sqlite3
 from sqlite3 import Error
+
+DB_PATH = "./db/pi.db"
 
 
 def create_connection(db_file):
@@ -14,11 +17,6 @@ def create_connection(db_file):
         return conn
     except Error as e:
         print(e)
-
-
-#    finally:
-#        if conn:
-#            conn.close()
 
 
 def get_current_index(conn, user):
@@ -48,9 +46,10 @@ def create_user(conn, user):
 
 
 def create_user_table():
-    database = r"C:\gitroot\PiThon\db\pi.db"
+    if not os.path.exists(DB_PATH):  # Creates the database directory, if it does not exist yet
+        os.mkdir("./db")
 
-    conn = sqlite3.connect(database)
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(""" CREATE TABLE IF NOT EXISTS user (
                 username text PRIMARY KEY,
@@ -63,8 +62,10 @@ def create_user_table():
 
 def create_test_users(c, conn):
     # 2 predefined users: "joerg" and "felix"
-    c.execute("SELECT COUNT(*) FROM user")
-    if c.fetchone()[0] == 0:
+    c.execute("SELECT * FROM user WHERE username=:username", {'username': 'joerg'})
+    if c.fetchone() is None:
         create_user(conn, "joerg")
+    c.execute("SELECT current_index FROM user WHERE username=:username", {'username': 'felix'})
+    if c.fetchone() is None:
         create_user(conn, "felix")
     conn.commit()

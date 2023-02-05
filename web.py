@@ -16,7 +16,7 @@ def pi():
         else:
             return pi_get_digit_at_index(index)
     else:
-        conn = create_connection(r"C:\gitroot\PiThon\db\pi.db")
+        conn = create_connection(DB_PATH)
         current_index = get_current_index(conn, user)
         if current_index < 0:
             return "error: user not found"
