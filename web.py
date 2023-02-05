@@ -1,3 +1,4 @@
+from database import *
 import mpmath
 from flask import Flask, request
 
@@ -6,11 +7,30 @@ app = Flask(__name__)
 
 @app.route('/pi')
 def pi():
+    user = request.args.get("user")
     index = request.args.get("index")
-    if index is None:
-        return pi_get_last_ten_digits()
+
+    if user is None:
+        if index is None:
+            return pi_get_last_ten_digits()
+        else:
+            return pi_get_digit_at_index(index)
     else:
-        return pi_get_digit_at_index(index)
+        conn = create_connection(r"C:\gitroot\PiThon\db\pi.db")
+        current_index = get_current_index(conn, user)
+        if current_index < 0:
+            return "error: user not found"
+        pi_string = pi_get_next_ten_digits_from_index(current_index)
+        raise_current_index(conn, user, 10)
+        return pi_string
+
+
+def pi_get_next_ten_digits_from_index(index):
+    mpmath.mp.dps = int(index) + 11
+    if int(index) == 0:  # Special case for first digit before "."
+        return str(mpmath.pi)[-12:-1]
+    else:
+        return str(mpmath.pi)[-11:-1]
 
 
 def pi_get_digit_at_index(index):
@@ -20,7 +40,7 @@ def pi_get_digit_at_index(index):
         if int(index) == 0:  # Special case for first digit before "."
             return "3"
         mpmath.mp.dps = int(index) + 2
-        return str(mpmath.pi)[-2:-1]
+        return str(mpmath.pi)[-2]
     except ValueError:
         return "error: invalid index"
 
@@ -48,4 +68,5 @@ def pi_reset():
 
 
 if __name__ == "__main__":
+    create_user_table()
     app.run()
