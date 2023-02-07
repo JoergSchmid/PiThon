@@ -15,7 +15,7 @@ class TestPi(unittest.TestCase):
     def test_pi_get_last_ten_digits(self):  # tests the pi() and pi_reset() functions
         pi_reset()
         self.assertEqual(pi_get_last_ten_digits(), "3.141592653")
-        self.assertEqual(pi_get_last_ten_digits(), "8979323846")
+        self.assertEqual(pi_get_last_ten_digits(), "5897932384")
         pi_reset()
         self.assertEqual(pi_get_last_ten_digits(), "3.141592653")
 
