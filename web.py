@@ -63,7 +63,8 @@ def pi_get_last_ten_digits():
 
 @app.route("/pi_reset")
 def pi_reset():
-    open("pi.txt", "w").truncate()
+    with open("pi.txt", "w") as f:
+        f.truncate()
     return "reset"
 
 
