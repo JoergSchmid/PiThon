@@ -7,8 +7,7 @@ app = Flask(__name__)
 
 @app.route('/pi')
 def pi():
-    user = request.args.get("user")
-    index = request.args.get("index")
+    user, index = pi_get_user_and_index()
 
     if user is None:
         if index is None:
@@ -23,6 +22,12 @@ def pi():
         pi_string = pi_get_next_ten_digits_from_index(current_index)
         raise_current_index(conn, user, 10)
         return pi_string
+
+
+def pi_get_user_and_index():
+    user = request.args.get("user")
+    index = request.args.get("index")
+    return user, index
 
 
 def pi_get_next_ten_digits_from_index(index):
@@ -63,7 +68,8 @@ def pi_get_last_ten_digits():
 
 @app.route("/pi_reset")
 def pi_reset():
-    open("pi.txt", "w").truncate()
+    with open("pi.txt", "w") as f:
+        f.truncate()
     return "reset"
 
 
