@@ -46,7 +46,7 @@ def create_user(conn, user):
 
 
 def create_user_table():
-    if not os.path.exists(DB_PATH):  # Creates the database directory, if it does not exist yet
+    if not os.path.exists("./db"):  # Creates the database directory, if it does not exist yet
         os.mkdir("./db")
 
     conn = sqlite3.connect(DB_PATH)
