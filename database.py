@@ -38,9 +38,20 @@ def raise_current_index(conn, user, increment):
     conn.commit()
 
 
-def create_user(conn, user):
+def get_password(conn, user):
     c = conn.cursor()
-    c.execute("INSERT INTO user VALUES  (:username, :current_index)", {'username': user, 'current_index': 0})
+    c.execute("SELECT password FROM user WHERE username=:username", {'username': user})
+    pw = c.fetchone()
+    conn.commit()
+    if pw is None:
+        return ""
+    return pw[0]
+
+
+def create_user(conn, user, password):
+    c = conn.cursor()
+    c.execute("INSERT INTO user VALUES  (:username, :current_index, :password)",
+              {'username': user, 'current_index': 0, 'password': password})
     conn.commit()
     return c.lastrowid
 
@@ -53,7 +64,8 @@ def create_user_table():
     c = conn.cursor()
     c.execute(""" CREATE TABLE IF NOT EXISTS user (
                 username text PRIMARY KEY,
-                current_index integer
+                current_index integer,
+                password text
                 ); """)
     conn.commit()
 
@@ -64,6 +76,6 @@ def create_test_users(c, conn):
     # 2 predefined users: "joerg" and "felix"
     c.execute("SELECT COUNT(*) FROM user")
     if c.fetchone()[0] == 0:
-        create_user(conn, "joerg")
-        create_user(conn, "felix")
+        create_user(conn, "joerg", "elsa")
+        create_user(conn, "felix", "mady")
     conn.commit()
