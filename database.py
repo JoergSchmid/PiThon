@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from sqlite3 import Error
+from werkzeug.security import generate_password_hash
 
 DB_PATH = "./db/pi.db"
 
@@ -44,7 +45,7 @@ def get_password(conn, user):
     pw = c.fetchone()
     conn.commit()
     if pw is None:
-        return ""
+        return None
     return pw[0]
 
 
@@ -76,6 +77,6 @@ def create_test_users(c, conn):
     # 2 predefined users: "joerg" and "felix"
     c.execute("SELECT COUNT(*) FROM user")
     if c.fetchone()[0] == 0:
-        create_user(conn, "joerg", "elsa")
-        create_user(conn, "felix", "mady")
+        create_user(conn, "joerg", generate_password_hash("elsa"))
+        create_user(conn, "felix", generate_password_hash("mady"))
     conn.commit()
