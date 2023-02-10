@@ -1,8 +1,26 @@
 from database import *
 import mpmath
 from flask import Flask, request
+from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
+
+USER_DATA = {
+    "joerg": "elsa"
+}
+
+
+@auth.verify_password
+def verify_password(username, password):
+    if get_password(create_connection(DB_PATH), username) == password:
+        return username
+
+
+@app.route('/home')
+@auth.login_required
+def home():
+    return f"Welcome home, {auth.current_user()}!"
 
 
 @app.route('/pi')
@@ -21,6 +39,8 @@ def pi():
             return "error: user not found"
         pi_string = pi_get_next_ten_digits_from_index(current_index)
         raise_current_index(conn, user, 10)
+        # pi_string = auth.current_user() + pi_string
+        print(auth.current_user())
         return pi_string
 
 
