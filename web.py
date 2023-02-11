@@ -1,4 +1,4 @@
-from database import *
+import http
 from flask import Flask
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
@@ -57,13 +57,7 @@ def pi():
         else:
             return pi_get_digit_at_index(index)
     else:
-        conn = create_connection(DB_PATH)
-        current_index = get_current_index(conn, user)
-        if current_index < 0:
-            return "error: user not found"
-        pi_string = pi_get_next_ten_digits_from_index(current_index)
-        raise_current_index(conn, user, 10)
-        return pi_string
+        return pi_get_next_ten_for_user(user)
 
 
 @app.route("/pi_reset")

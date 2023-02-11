@@ -1,5 +1,6 @@
 import mpmath
 from flask import request
+from database import *
 
 
 def pi_get_user_and_index():
@@ -58,3 +59,13 @@ def pi_get_digits_up_to(index):
         return "3"
     mpmath.mp.dps = index + 1
     return str(mpmath.pi)
+
+
+def pi_get_next_ten_for_user(user):
+    conn = create_connection(DB_PATH)
+    current_index = get_current_index(conn, user)
+    if current_index < 0:
+        return "error: user not found"
+    pi_string = pi_get_next_ten_digits_from_index(current_index)
+    raise_current_index(conn, user, 10)
+    return pi_string
