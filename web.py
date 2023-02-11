@@ -27,7 +27,7 @@ def post():
     try:
         if 'user' in data:
             user = data['user']
-            return f"Hello {user}!"
+            return pi_get_next_ten_for_user(user)
         if 'index' in data:
             index = int(data['index'])
             return pi_get_digit_at_index(index)
