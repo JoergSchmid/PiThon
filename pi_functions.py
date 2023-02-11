@@ -42,3 +42,19 @@ def pi_get_last_ten_digits():
         if number_of_digits == 1:
             return pi[-12:-1]
         return pi[-12:-2]
+
+
+def pi_get_all_from_file():
+    with open("pi.txt", "a+") as f:
+        f.seek(0)
+        line = f.readline()
+        if len(line) == 0:
+            return "Empty"
+        return line[:-1]
+
+
+def pi_get_digits_up_to(index):
+    if index <= 0:
+        return "3"
+    mpmath.mp.dps = index + 1
+    return str(mpmath.pi)
