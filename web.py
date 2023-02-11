@@ -21,6 +21,32 @@ def home():
     return f"Welcome home, {auth.current_user()}!"
 
 
+@app.route('/post', methods=['POST'])
+def post():
+    data = request.json
+    try:
+        if 'user' in data:
+            user = data['user']
+            return f"Hello {user}!"
+        if 'index' in data:
+            index = int(data['index'])
+            return pi_get_digit_at_index(index)
+        if 'upto' in data:
+            upto = int(data['upto'])
+            return pi_get_digits_up_to(upto)
+        if 'getfile' in data and (data['getfile'] == "true" or data['getfile']):
+            return pi_get_all_from_file()
+    except ValueError:
+        return "error: invalid key or value in post request"
+    return """No valid post request found.
+                Valid post requests are:
+                'user': 'name', 
+                'index': 'int', 
+                'upto': 'int', 
+                'getfile': 'true'
+                """
+
+
 @app.route('/pi')
 def pi():
     user, index = pi_get_user_and_index()
