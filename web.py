@@ -34,7 +34,7 @@ def post():
         if 'upto' in data:
             upto = int(data['upto'])
             return pi_get_digits_up_to(upto)
-        if 'getfile' in data and (data['getfile'] == "true" or data['getfile']):
+        if 'getfile' in data and data['getfile'] == "true":
             return pi_get_all_from_file()
     except ValueError:
         return str(http.HTTPStatus(400))
