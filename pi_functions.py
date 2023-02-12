@@ -50,15 +50,15 @@ def pi_get_all_from_file():
         f.seek(0)
         line = f.readline()
         if len(line) == 0:
-            return "Empty"
+            return "empty"
         return line[:-1]
 
 
 def pi_get_digits_up_to(index):
     if index <= 0:
         return "3"
-    mpmath.mp.dps = index + 1
-    return str(mpmath.pi)
+    mpmath.mp.dps = index + 2
+    return str(mpmath.pi)[:-1]
 
 
 def pi_get_next_ten_for_user(user):
