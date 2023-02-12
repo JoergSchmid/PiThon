@@ -37,14 +37,14 @@ def post():
         if 'getfile' in data and data['getfile'] == "true":
             return pi_get_all_from_file()
     except ValueError:
-        return str(http.HTTPStatus(400))
+        return "Error during option parsing", http.HTTPStatus(500)
     return """No valid post request found.
                 Valid post requests are:
                 'user': 'name', 
                 'index': 'int', 
                 'upto': 'int', 
                 'getfile': 'true'
-                """
+                """, http.HTTPStatus(400)
 
 
 @app.route('/pi', methods=['GET', 'DELETE'])
