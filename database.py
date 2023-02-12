@@ -39,6 +39,12 @@ def raise_current_index(conn, user, increment):
     conn.commit()
 
 
+def reset_current_index(conn, user):
+    c = conn.cursor()
+    c.execute("UPDATE user SET current_index =:index WHERE username=:username", {'index': 0, 'username': user})
+    conn.commit()
+
+
 def get_password(conn, user):
     c = conn.cursor()
     c.execute("SELECT password FROM user WHERE username=:username", {'username': user})
