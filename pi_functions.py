@@ -2,6 +2,10 @@ import mpmath
 from flask import request
 from database import *
 
+# All the functions, that are mainly used from /pi endpoint.
+# For rounding reasons, mpmath.mp.dps must be set 1 higher and the resulting string
+# must be cut by the last digit in most functions.
+
 
 def pi_get_user_and_index():
     user = request.args.get("user")
