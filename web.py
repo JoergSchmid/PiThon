@@ -1,4 +1,3 @@
-import http
 from flask import Flask
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
@@ -12,7 +11,8 @@ auth = HTTPBasicAuth()
 def verify_password(username, password):
     pw_hash = get_password(create_connection(DB_PATH), username)
     if pw_hash is not None and check_password_hash(pw_hash, password):
-        return username
+        return True
+    return False
 
 
 @app.route('/home')
