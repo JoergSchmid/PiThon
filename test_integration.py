@@ -16,22 +16,22 @@ def test_standard_endpoints(c):
     assert c.get("/pi").data == b"3.141592653"
 
 
-def test_post(c):
+def test_get(c):
     c.delete("/pi?user=joerg")
-    assert c.post("/post", json={'user': 'joerg'}).get_data(True) == "3.141592653"
-    assert c.post("/post", json={'user': 'joerg'}).get_data(True) == "5897932384"
+    assert c.get("/get?user=joerg").data == b"3.141592653"
+    assert c.get("/get?user=joerg").data == b"5897932384"
     c.delete("/pi?user=joerg")
-    assert c.post("/post", json={'user': 'joerg'}).get_data(True) == "3.141592653"
+    assert c.get("/get?user=joerg").data == b"3.141592653"
 
-    assert c.post("/post", json={'index': '0'}).get_data(True) == "3"
-    assert c.post("/post", json={'index': '4'}).get_data(True) == "5"
+    assert c.get("/get?index=0").data == b"3"
+    assert c.get("/get?index=4").data == b"5"
 
-    assert c.post("/post", json={'upto': '4'}).get_data(True) == "3.1415"
+    assert c.get("/get?upto=4").data == b"3.1415"
 
     c.get("/pi_reset")
-    assert c.post("/post", json={'getfile': 'true'}).get_data(True) == "empty"
+    assert c.get("/get?getfile=true").data == b"empty"
     c.get("/pi")
-    assert c.post("/post", json={'getfile': 'true'}).get_data(True) == "3.141592653"
+    assert c.get("/get?getfile=true").data == b"3.141592653"
 
 
 def test_delete(c):
