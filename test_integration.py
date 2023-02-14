@@ -1,11 +1,16 @@
 import web
+from database import get_password, create_connection, DB_PATH
+from flask.json import jsonify
+from werkzeug.security import check_password_hash
+from flask_httpauth import HTTPBasicAuth
 
 
 def test_client():
     with web.app.test_client() as c:
         test_standard_endpoints(c)
-        test_post(c)
+        test_get(c)
         test_delete(c)
+        test_admin(c)
 
 
 def test_standard_endpoints(c):
@@ -44,6 +49,34 @@ def test_delete(c):
     assert c.get("/pi?user=felix").data == b"3.141592653"
     c.delete("/pi?user=felix")
     assert c.get("/pi?user=felix").data == b"3.141592653"
+
+
+def test_admin(c):
+    assert c.get("/admin/users").status_code == 401  # Unauthorized, no auth
+    assert c.get("/admin/users", auth=("felix", "mady")).status_code == 403  # Forbidden, not admin (joerg)
+    assert c.get("/admin/users", auth=("joerg", "elsa")).status_code == 200
+
+    c.delete("/admin/users?user=test_user", auth=("joerg", "elsa"))  # Delete test_user in case they exist
+
+    assert c.post("/admin/users").status_code == 401
+    assert c.post("/admin/users", auth=("felix", "mady")).status_code == 415  # No json
+    assert c.post("/admin/users", auth=("felix", "mady"),
+                  json={"username": "test_user", "password": "wrong_password"}).status_code == 403
+    assert c.post("/admin/users", auth=("joerg", "elsa"),
+                  json={"username": "test_user", "password": "test_password"}).status_code == 201
+
+    assert c.patch("/admin/users?user=test_user").status_code == 401
+    assert c.patch("/admin/users?user=test_user", auth=("felix", "mady")).status_code == 415
+    assert c.patch("/admin/users?user=test_user", auth=("felix", "mady"),
+                   json={"password": "wrong_password"}).status_code == 403
+    assert c.patch("/admin/users?user=test_user", auth=("joerg", "elsa"),
+                   json={"password": "new_test_password"}).status_code == 201
+    assert check_password_hash(get_password(create_connection(DB_PATH), "test_user"), "new_test_password")
+    c.patch()
+
+    assert c.delete("/admin/users?user=test_user").status_code == 401
+    assert c.delete("/admin/users?user=test_user", auth=("felix", "mady")).status_code == 403
+    assert c.delete("/admin/users?user=test_user", auth=("joerg", "elsa")).status_code == 200
 
 
 if __name__ == "__main__":
