@@ -21,30 +21,25 @@ def home():
     return f"Welcome home, {auth.current_user()}!"
 
 
-@app.route('/post', methods=['POST'])
-def post():
-    data = request.json
     try:
-        if 'user' in data:
-            user = data['user']
-            return pi_get_next_ten_for_user(user)
-        if 'index' in data:
-            index = int(data['index'])
-            return pi_get_digit_at_index(index)
-        if 'upto' in data:
-            upto = int(data['upto'])
-            return pi_get_digits_up_to(upto)
-        if 'getfile' in data and data['getfile'] == "true":
-            return pi_get_all_from_file()
+@app.get('/get')
+def get():
+    try:
+        user = request.args.get("user")
+        if user is not None:
+            return pi_get_next_ten_for_user(user), 200
+        index = request.args.get("index")
+        if index is not None:
+            return pi_get_digit_at_index(int(index)), 200
+        upto = request.args.get("upto")
+        if upto is not None:
+            return pi_get_digits_up_to(int(upto)), 200
+        getfile = request.args.get("getfile")
+        if getfile is not None and getfile == "true":
+            return pi_get_all_from_file(), 200
     except ValueError:
-        return str(http.HTTPStatus(400))
-    return """No valid post request found.
-                Valid post requests are:
-                'user': 'name', 
-                'index': 'int', 
-                'upto': 'int', 
-                'getfile': 'true'
-                """
+        return {"error": "invalid value"}, 400
+    return {"error": "No known request sent"}, 400
 
 
 @app.route('/pi', methods=['GET', 'DELETE'])
