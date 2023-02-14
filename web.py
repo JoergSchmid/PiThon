@@ -21,7 +21,85 @@ def home():
     return f"Welcome home, {auth.current_user()}!"
 
 
+@app.get('/admin/users')
+@auth.login_required
+def admin_get_all_users():
+    if auth.current_user() != "joerg":
+        return "Unauthorized. Admin access only.", 403
+
+    conn = create_connection(DB_PATH)
+
+    users = get_all_user_names(conn)
+    return users, 200
+
+
+@app.post('/admin/users')
+@auth.login_required
+def admin_add_user():
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
+
+    if auth.current_user() != "joerg":
+        return "Unauthorized. Admin access only.", 403
+
+    data = request.get_json()
+    conn = create_connection(DB_PATH)
+
     try:
+        if is_user_existing(conn, data["username"]):
+            return "User already exists.", 409
+
+        create_user(conn, data["username"], data["password"])
+        return data["username"], 201
+    except (KeyError, ValueError):
+        return "Invalid Request", 400
+
+
+@app.patch('/admin/users')
+@auth.login_required
+def admin_change_password():
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
+
+    if auth.current_user() != "joerg":
+        return "Unauthorized. Admin access only.", 403
+
+    username = request.args.get("user")
+    if username is None:
+        return "No user input found. Please use '?user='", 400
+
+    data = request.get_json()
+    conn = create_connection(DB_PATH)
+
+    try:
+        if not is_user_existing(conn, username):
+            return "User does not exist.", 404
+
+        change_password(conn, username, generate_password_hash(data["password"]))
+        return {"username": username, "password": get_password(conn, username)}, 201
+    except (KeyError, ValueError):
+        return "Invalid Request", 400
+
+
+@app.delete('/admin/users')
+@auth.login_required
+def admin_delete_user():
+    if auth.current_user() != "joerg":
+        return "Unauthorized. Admin access only.", 403
+
+    username = request.args.get("user")
+    if username is None:
+        return "No user input found. Please use '?user='", 400
+
+    conn = create_connection(DB_PATH)
+
+    if not is_user_existing(conn, username):
+        return "User not found.", 404
+
+    delete_user(conn, username)
+    return {}, 200
+
+
 @app.get('/get')
 def get():
     try:
