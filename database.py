@@ -34,20 +34,20 @@ def get_current_index(conn, user):
 def raise_current_index(conn, user, increment):
     c = conn.cursor()
     updated_index = get_current_index(conn, user) + increment
-    c.execute("UPDATE user SET current_index =:index WHERE username=:username",
+    c.execute("UPDATE user SET current_index =:index WHERE username =:username",
               {'index': updated_index, 'username': user})
     conn.commit()
 
 
 def reset_current_index(conn, user):
     c = conn.cursor()
-    c.execute("UPDATE user SET current_index =:index WHERE username=:username", {'index': 0, 'username': user})
+    c.execute("UPDATE user SET current_index =:index WHERE username =:username", {'index': 0, 'username': user})
     conn.commit()
 
 
 def get_password(conn, user):
     c = conn.cursor()
-    c.execute("SELECT password FROM user WHERE username=:username", {'username': user})
+    c.execute("SELECT password FROM user WHERE username =:username", {'username': user})
     pw = c.fetchone()
     conn.commit()
     if pw is None:
