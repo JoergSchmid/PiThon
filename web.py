@@ -120,23 +120,30 @@ def get():
     return {"error": "No known request sent"}, 400
 
 
-@app.route('/pi', methods=['GET', 'DELETE'])
+@app.get('/pi')
 def pi():
     user, index = pi_get_user_and_index()
-    is_delete_request = str(request.method) == "DELETE"
 
     if user is None:
         if index is None:
-            if is_delete_request:
-                return pi_reset()
             return pi_get_last_ten_digits()
         else:
             return pi_get_digit_at_index(index)
     else:
-        if is_delete_request:
-            reset_current_index(create_connection(DB_PATH), user)
-            return f"reset {user}"
         return pi_get_next_ten_for_user(user)
+
+
+@app.delete('/pi')
+def pi_delete():
+    user, index = pi_get_user_and_index()
+
+    if user is None:
+        if index is None:
+            pi_reset()
+            return {}, 201
+    else:
+        reset_current_index(create_connection(DB_PATH), user)
+        return {}, 201
 
 
 @app.route("/pi_reset")
