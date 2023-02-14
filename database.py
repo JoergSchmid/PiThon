@@ -55,12 +55,50 @@ def get_password(conn, user):
     return pw[0]
 
 
+def change_password(conn, user, password):
+    c = conn.cursor()
+    c.execute("UPDATE user SET password =:password WHERE username =:username", {'password': password, 'username': user})
+    conn.commit()
+
+
+def get_user_data(conn, user):
+    c = conn.cursor()
+    c.execute("SELECT * FROM user WHERE username =:username", {'username': user})
+    data = c.fetchone()
+    conn.commit()
+    return data
+
+
+def get_all_user_names(conn):
+    c = conn.cursor()
+    c.execute("SELECT username FROM user")
+    data = c.fetchall()
+    conn.commit()
+    return data
+
+
 def create_user(conn, user, password):
     c = conn.cursor()
     c.execute("INSERT INTO user VALUES  (:username, :current_index, :password)",
               {'username': user, 'current_index': 0, 'password': password})
     conn.commit()
     return c.lastrowid
+
+
+def delete_user(conn, user):
+    c = conn.cursor()
+    c.execute("DELETE FROM user WHERE username =:username", {'username': user})
+    conn.commit()
+
+
+def is_user_existing(conn, user):
+    c = conn.cursor()
+    c.execute("SELECT username FROM user WHERE username =:username", {'username': user})
+    data = c.fetchone()
+    conn.commit()
+    if data is None:
+        return False
+    return True
 
 
 def create_user_table():
