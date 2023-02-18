@@ -21,10 +21,21 @@ def create_connection(db_file):
 
 
 def get_current_index(conn, user):
+def db_execute(conn, query, parameters, fetchall=False):
     c = conn.cursor()
     c.execute("SELECT current_index FROM user WHERE username=:username", {'username': user})
     index = c.fetchone()
+    try:
+        c.execute(query, parameters)
+    except Error:
+        print("Error in db_execute()")
+        return
+    if fetchall:
+        data = c.fetchall()
+    else:
+        data = c.fetchone()
     conn.commit()
+    return data
     if index is None:
         return -1
     else:
