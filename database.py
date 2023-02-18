@@ -135,3 +135,10 @@ def create_test_users(c, conn):
         create_user(conn, "joerg", generate_password_hash("elsa"))
         create_user(conn, "felix", generate_password_hash("mady"))
     conn.commit()
+def create_test_users(conn):
+    # 2 predefined users: "joerg" and "felix". Created freshly for each session.
+    # Permanent users are created on the admin endpoint.
+    delete_user(conn, "joerg")
+    delete_user(conn, "felix")
+    create_user(conn, "joerg", generate_password_hash("elsa"))
+    create_user(conn, "felix", generate_password_hash("mady"))
