@@ -1,8 +1,11 @@
+import http
 import web
 from database import get_password, create_connection, DB_PATH
-from flask.json import jsonify
 from werkzeug.security import check_password_hash
-from flask_httpauth import HTTPBasicAuth
+
+status = http.HTTPStatus
+USER_JOERG = ("joerg", "elsa")
+USER_FELIX = ("felix", "mady")
 
 
 def test_client():
