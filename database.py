@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash
 DB_PATH = "./db/pi.db"
 TEST_USER_ADMIN = ("joerg", "elsa")
 TEST_USER_STD = ("felix", "mady")
+FORBIDDEN_NAMES = ["getfile", "upto"]  # These words are commands.
 
 
 def create_connection(db_file):
@@ -79,6 +80,8 @@ def get_all_user_names(conn):
 
 
 def create_user(conn, user, password):
+    if is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
+        return None
     db_execute(conn, "INSERT INTO user VALUES  (:username, :current_index, :password)",
                {'username': user, 'current_index': 0, 'password': generate_password_hash(password)})
 
