@@ -4,6 +4,8 @@ from sqlite3 import Error
 from werkzeug.security import generate_password_hash
 
 DB_PATH = "./db/pi.db"
+TEST_USER_ADMIN = ("joerg", "elsa")
+TEST_USER_STD = ("felix", "mady")
 
 
 def create_connection(db_file):
@@ -110,7 +112,7 @@ def create_user_table():
 def create_test_users(conn):
     # 2 predefined users: "joerg" and "felix". Created freshly for each session.
     # Permanent users are created on the admin endpoint.
-    delete_user(conn, "joerg")
-    delete_user(conn, "felix")
-    create_user(conn, "joerg", generate_password_hash("elsa"))
-    create_user(conn, "felix", generate_password_hash("mady"))
+    delete_user(conn, TEST_USER_ADMIN[0])
+    delete_user(conn, TEST_USER_STD[0])
+    create_user(conn, TEST_USER_ADMIN[0], TEST_USER_ADMIN[1])
+    create_user(conn, TEST_USER_STD[0], TEST_USER_STD[1])
