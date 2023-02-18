@@ -8,16 +8,18 @@ from pathlib import Path
 
 status = http.HTTPStatus
 CONFIG_DB_PATH = "DB_PATH"
+CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
 
 
-def create_app(db_folder="./db/"):
+def create_app(storage_folder="./db/"):
     """
     Formated according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
-    :param db_folder: folder the database should use
+    :param storage_folder: folder the database should use
     :return: app
     """
     app = Flask(__name__)
-    app.config[CONFIG_DB_PATH] = Path(db_folder) / "pi.db"
+    app.config[CONFIG_DB_PATH] = Path(storage_folder) / "pi.db"
+    app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
 
     auth = HTTPBasicAuth()
 
@@ -120,7 +122,7 @@ def create_app(db_folder="./db/"):
             if data.isnumeric():
                 return pi_get_digit_at_index(int(data)), status.OK
             if data == "getfile":
-                return pi_get_all_from_file(), status.OK
+                return pi_get_all_from_file(app.config[CONFIG_PI_TXT_PATH]), status.OK
             if "upto" in data and data.split("upto")[1].isnumeric():
                 return pi_get_digits_up_to(int(data.split("upto")[1])), status.OK
             if data is not None:
@@ -131,7 +133,7 @@ def create_app(db_folder="./db/"):
 
     @app.get('/pi')
     def pi():
-        return pi_get_last_ten_digits(), status.OK
+        return pi_get_last_ten_digits(app.config[CONFIG_PI_TXT_PATH]), status.OK
 
     @app.get('/pi/<data>')
     def pi_user(data):
@@ -147,7 +149,7 @@ def create_app(db_folder="./db/"):
 
     @app.route("/pi_reset")
     def pi_reset():
-        with open("pi.txt", "w") as f:
+        with open(app.config[CONFIG_PI_TXT_PATH], "w") as f:
             f.truncate()
         return "reset"
 

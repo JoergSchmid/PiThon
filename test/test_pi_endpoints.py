@@ -30,7 +30,6 @@ def test_get_special_options(client):
 
 
 def test_delete_resets_index(client):
-    client.get("/pi_reset")
     assert client.get("/pi").data == b"3.141592653"
     client.get("/pi_reset")
     assert client.get("/pi").data == b"3.141592653"

@@ -27,8 +27,8 @@ def pi_get_digit_at_index(index):
         return "error: invalid index"
 
 
-def pi_get_last_ten_digits():
-    with open("pi.txt", "a+") as f:
+def pi_get_last_ten_digits(pi_txt_path):
+    with open(pi_txt_path, "a+") as f:
         f.seek(0)
         number_of_digits = len(f.readline())
         if number_of_digits == 0:  # the first ten digits contain a "." that needs to be adjusted for
@@ -43,8 +43,8 @@ def pi_get_last_ten_digits():
         return pi[-12:-2]
 
 
-def pi_get_all_from_file():
-    with open("pi.txt", "a+") as f:
+def pi_get_all_from_file(pi_txt_path):
+    with open(pi_txt_path, "a+") as f:
         f.seek(0)
         line = f.readline()
         if len(line) == 0:
