@@ -2,6 +2,7 @@ import http
 from flask import Flask
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
+import database
 from pi_functions import *
 
 
@@ -16,6 +17,7 @@ def innit_app():
 
 def is_admin(user):
     return user == database.TEST_USER_ADMIN[0]
+
 
 @auth.verify_password
 def verify_password(username, password):
@@ -34,7 +36,7 @@ def home():
 @app.get('/admin/users')
 @auth.login_required
 def admin_get_all_users():
-    if auth.current_user() != "joerg":
+    if not is_admin(auth.current_user()):
         return "Unauthorized. Admin access only.", status.FORBIDDEN
 
     conn = create_connection(DB_PATH)
@@ -49,7 +51,7 @@ def admin_add_user():
     if not request.is_json:
         return {"error": "Request must be JSON"}, status.UNSUPPORTED_MEDIA_TYPE
 
-    if auth.current_user() != "joerg":
+    if not is_admin(auth.current_user()):
         return "Unauthorized. Admin access only.", status.FORBIDDEN
 
     data = request.get_json()
@@ -59,72 +61,69 @@ def admin_add_user():
         if is_user_existing(conn, data["username"]):
             return "User already exists.", status.CONFLICT
 
+        if data["username"] in database.FORBIDDEN_NAMES:
+            return "Illegal name.", status.CONFLICT
+
         create_user(conn, data["username"], data["password"])
         return data["username"], status.CREATED
     except (KeyError, ValueError):
         return "Invalid Request", status.BAD_REQUEST
 
 
-@app.patch('/admin/users')
+@app.patch('/admin/users/<user>')
 @auth.login_required
-def admin_change_password():
+def admin_change_password(user):
     if not request.is_json:
         return {"error": "Request must be JSON"}, status.UNSUPPORTED_MEDIA_TYPE
 
-    if auth.current_user() != "joerg":
+    if not is_admin(auth.current_user()):
         return "Unauthorized. Admin access only.", status.FORBIDDEN
 
-    username = request.args.get("user")
-    if username is None:
-        return "No user input found. Please use '?user='", status.BAD_REQUEST
+    if user is None:
+        return "No user input found.", status.BAD_REQUEST
 
     data = request.get_json()
     conn = create_connection(DB_PATH)
 
     try:
-        if not is_user_existing(conn, username):
+        if not is_user_existing(conn, user):
             return "User does not exist.", status.NOT_FOUND
 
-        change_password(conn, username, generate_password_hash(data["password"]))
-        return {"username": username, "password": "***"}, status.CREATED
+        change_password(conn, user, data["password"])
+        return {"username": user, "password": "***"}, status.CREATED
     except (KeyError, ValueError):
         return "Invalid Request", status.BAD_REQUEST
 
 
-@app.delete('/admin/users')
+@app.delete('/admin/users/<user>')
 @auth.login_required
-def admin_delete_user():
-    if auth.current_user() != "joerg":
+def admin_delete_user(user):
+    if not is_admin(auth.current_user()):
         return "Unauthorized. Admin access only.", status.FORBIDDEN
 
-    username = request.args.get("user")
-    if username is None:
+    if user is None:
         return "No user input found. Please use '?user='", status.BAD_REQUEST
 
     conn = create_connection(DB_PATH)
 
-    if not is_user_existing(conn, username):
+    if not is_user_existing(conn, user):
         return "User not found.", status.NOT_FOUND
 
-    delete_user(conn, username)
+    delete_user(conn, user)
     return {}, status.OK
 
 
-@app.get('/get')
-def get():
+@app.get('/get/<data>')
+def get(data):
     try:
-        user = request.args.get("user")
-        if user is not None:
-            return pi_get_next_ten_for_user(user), status.OK
-        index = request.args.get("index")
-        if index is not None:
-            return pi_get_digit_at_index(int(index)), status.OK
-        upto = request.args.get("upto")
-        if upto is not None:
-            return pi_get_digits_up_to(int(upto)), status.OK
-        getfile = request.args.get("getfile")
-        if getfile is not None and getfile == "true":
+        if data.isnumeric():
+            return pi_get_digit_at_index(int(data)), status.OK
+        if data == "getfile":
             return pi_get_all_from_file(), status.OK
+        if "upto" in data and data.split("upto")[1].isnumeric():
+            return pi_get_digits_up_to(int(data.split("upto")[1])), status.OK
+        if data is not None:
+            return pi_get_next_ten_for_user(data), status.OK
     except ValueError:
         return {"error": "invalid value"}, status.BAD_REQUEST
     return {"error": "No known request sent"}, status.BAD_REQUEST
@@ -132,28 +131,21 @@ def get():
 
 @app.get('/pi')
 def pi():
-    user, index = pi_get_user_and_index()
-
-    if user is None:
-        if index is None:
-            return pi_get_last_ten_digits()
-        else:
-            return pi_get_digit_at_index(index)
-    else:
-        return pi_get_next_ten_for_user(user)
+    return pi_get_last_ten_digits(), status.OK
 
 
-@app.delete('/pi')
-def pi_delete():
-    user, index = pi_get_user_and_index()
+@app.get('/pi/<data>')
+def pi_user(data):
+    if data.isnumeric():
+        return pi_get_digit_at_index(int(data)), status.OK
 
-    if user is None:
-        if index is None:
-            pi_reset()
-            return {}, status.CREATED
-    else:
-        reset_current_index(create_connection(DB_PATH), user)
-        return {}, status.CREATED
+    return pi_get_next_ten_for_user(data), status.OK
+
+
+@app.delete('/pi/<user>')
+def pi_delete(user):
+    reset_current_index(create_connection(DB_PATH), user)
+    return {}, status.OK
 
 
 @app.route("/pi_reset")
