@@ -83,7 +83,7 @@ def admin_change_password():
             return "User does not exist.", status.NOT_FOUND
 
         change_password(conn, username, generate_password_hash(data["password"]))
-        return {"username": username, "password": get_password(conn, username)}, status.CREATED
+        return {"username": username, "password": "***"}, status.CREATED
     except (KeyError, ValueError):
         return "Invalid Request", status.BAD_REQUEST
 
