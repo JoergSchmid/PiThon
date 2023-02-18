@@ -3,7 +3,6 @@ import sqlite3
 from sqlite3 import Error
 from werkzeug.security import generate_password_hash
 
-DB_PATH = "./db/pi.db"
 TEST_USER_ADMIN = ("joerg", "elsa")
 TEST_USER_STD = ("felix", "mady")
 FORBIDDEN_NAMES = ["getfile", "upto"]  # These words are commands.
@@ -15,6 +14,10 @@ def create_connection(db_file):
         :param db_file: database file
         :return: Connection object or None
         """
+    folder = db_file.parent
+    if not os.path.exists(folder):  # Creates the database directory, if it does not exist yet
+        os.mkdir(folder)
+
     conn = None
     try:
         conn = sqlite3.connect(db_file)
@@ -95,11 +98,8 @@ def is_user_existing(conn, user):
     return data is not None
 
 
-def create_user_table():
-    if not os.path.exists("./db"):  # Creates the database directory, if it does not exist yet
-        os.mkdir("./db")
-
-    conn = sqlite3.connect(DB_PATH)
+def create_user_table(path):
+    conn = create_connection(path)
     db_execute(conn, """ CREATE TABLE IF NOT EXISTS user (
                     username text PRIMARY KEY,
                     current_index integer,
