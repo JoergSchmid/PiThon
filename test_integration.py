@@ -24,33 +24,33 @@ def test_standard_endpoints(c):
 
 
 def test_get(c):
-    c.delete("/pi?user=joerg")
-    assert c.get("/get?user=joerg").data == b"3.141592653"
-    assert c.get("/get?user=joerg").data == b"5897932384"
-    c.delete("/pi?user=joerg")
-    assert c.get("/get?user=joerg").data == b"3.141592653"
+    c.delete("/pi/joerg")
+    assert c.get("/get/joerg").data == b"3.141592653"
+    assert c.get("/get/joerg").data == b"5897932384"
+    c.delete("/pi/joerg")
+    assert c.get("/get/joerg").data == b"3.141592653"
 
-    assert c.get("/get?index=0").data == b"3"
-    assert c.get("/get?index=4").data == b"5"
+    assert c.get("/get/0").data == b"3"
+    assert c.get("/get/4").data == b"5"
 
-    assert c.get("/get?upto=4").data == b"3.1415"
+    assert c.get("/get/upto4").data == b"3.1415"
 
     c.get("/pi_reset")
-    assert c.get("/get?getfile=true").data == b"empty"
+    assert c.get("/get/getfile").data == b"empty"
     c.get("/pi")
-    assert c.get("/get?getfile=true").data == b"3.141592653"
+    assert c.get("/get/getfile").data == b"3.141592653"
 
 
 def test_delete(c):
-    c.delete("/pi")
+    c.get("/pi_reset")
     assert c.get("/pi").data == b"3.141592653"
-    c.delete("/pi")
+    c.get("/pi_reset")
     assert c.get("/pi").data == b"3.141592653"
 
-    c.delete("/pi?user=felix")
-    assert c.get("/pi?user=felix").data == b"3.141592653"
-    c.delete("/pi?user=felix")
-    assert c.get("/pi?user=felix").data == b"3.141592653"
+    c.delete("/pi/felix")
+    assert c.get("/pi/felix").data == b"3.141592653"
+    c.delete("/pi/felix")
+    assert c.get("/pi/felix").data == b"3.141592653"
 
 
 def test_admin(c):  # Testing the admin functions. Should only be accessible by admin (joerg)
@@ -67,7 +67,7 @@ def test_admin_get_users(c):
 
 
 def test_admin_post_new_user(c):
-    c.delete("/admin/users?user=test_user", auth=TEST_USER_ADMIN)  # Delete test_user in case they exist
+    c.delete("/admin/users/test_user", auth=TEST_USER_ADMIN)  # Delete test_user in case they exist
 
     assert c.post("/admin/users").status_code == status.UNAUTHORIZED
     assert c.post("/admin/users", auth=TEST_USER_STD).status_code == status.UNSUPPORTED_MEDIA_TYPE  # No json
@@ -78,19 +78,19 @@ def test_admin_post_new_user(c):
 
 
 def test_admin_patch_new_password(c):
-    assert c.patch("/admin/users?user=test_user").status_code == status.UNAUTHORIZED
-    assert c.patch("/admin/users?user=test_user", auth=TEST_USER_STD).status_code == status.UNSUPPORTED_MEDIA_TYPE
-    assert c.patch("/admin/users?user=test_user", auth=TEST_USER_STD,
+    assert c.patch("/admin/users/test_user").status_code == status.UNAUTHORIZED
+    assert c.patch("/admin/users/test_user", auth=TEST_USER_STD).status_code == status.UNSUPPORTED_MEDIA_TYPE
+    assert c.patch("/admin/users/test_user", auth=TEST_USER_STD,
                    json={"password": "wrong_password"}).status_code == status.FORBIDDEN
-    assert c.patch("/admin/users?user=test_user", auth=TEST_USER_ADMIN,
+    assert c.patch("/admin/users/test_user", auth=TEST_USER_ADMIN,
                    json={"password": "new_test_password"}).status_code == status.CREATED
     assert check_password_hash(get_password(create_connection(DB_PATH), "test_user"), "new_test_password")
 
 
 def test_admin_delete_test_user(c):
-    assert c.delete("/admin/users?user=test_user").status_code == status.UNAUTHORIZED
-    assert c.delete("/admin/users?user=test_user", auth=TEST_USER_STD).status_code == status.FORBIDDEN
-    assert c.delete("/admin/users?user=test_user", auth=TEST_USER_ADMIN).status_code == status.OK
+    assert c.delete("/admin/users/test_user").status_code == status.UNAUTHORIZED
+    assert c.delete("/admin/users/test_user", auth=TEST_USER_STD).status_code == status.FORBIDDEN
+    assert c.delete("/admin/users/test_user", auth=TEST_USER_ADMIN).status_code == status.OK
 
 
 if __name__ == "__main__":
