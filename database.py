@@ -20,11 +20,8 @@ def create_connection(db_file):
         print(e)
 
 
-def get_current_index(conn, user):
 def db_execute(conn, query, parameters, fetchall=False):
     c = conn.cursor()
-    c.execute("SELECT current_index FROM user WHERE username=:username", {'username': user})
-    index = c.fetchone()
     try:
         c.execute(query, parameters)
     except Error:
@@ -36,6 +33,10 @@ def db_execute(conn, query, parameters, fetchall=False):
         data = c.fetchone()
     conn.commit()
     return data
+
+
+def get_current_index(conn, user):
+    index = db_execute(conn, "SELECT current_index FROM user WHERE username =:username", {'username': user})
     if index is None:
         return -1
     else:
@@ -43,57 +44,40 @@ def db_execute(conn, query, parameters, fetchall=False):
 
 
 def raise_current_index(conn, user, increment):
-    c = conn.cursor()
     updated_index = get_current_index(conn, user) + increment
-    c.execute("UPDATE user SET current_index =:index WHERE username =:username",
-              {'index': updated_index, 'username': user})
-    conn.commit()
+    db_execute(conn, "UPDATE user SET current_index =:index WHERE username =:username",
+               {'index': updated_index, 'username': user})
 
 
 def reset_current_index(conn, user):
-    c = conn.cursor()
-    c.execute("UPDATE user SET current_index =:index WHERE username =:username", {'index': 0, 'username': user})
-    conn.commit()
+    db_execute(conn, "UPDATE user SET current_index =:index WHERE username =:username", {'index': 0, 'username': user})
 
 
 def get_password(conn, user):
-    c = conn.cursor()
-    c.execute("SELECT password FROM user WHERE username =:username", {'username': user})
-    pw = c.fetchone()
-    conn.commit()
+    pw = db_execute(conn, "SELECT password FROM user WHERE username =:username", {'username': user})
     if pw is None:
         return None
     return pw[0]
 
 
 def change_password(conn, user, password):
-    c = conn.cursor()
-    c.execute("UPDATE user SET password =:password WHERE username =:username", {'password': password, 'username': user})
-    conn.commit()
+    db_execute(conn, "UPDATE user SET password =:password WHERE username =:username",
+               {'password': password, 'username': user})
 
 
 def get_user_data(conn, user):
-    c = conn.cursor()
-    c.execute("SELECT * FROM user WHERE username =:username", {'username': user})
-    data = c.fetchone()
-    conn.commit()
+    data = db_execute(conn, "SELECT * FROM user WHERE username =:username", {'username': user})
     return data
 
 
 def get_all_user_names(conn):
-    c = conn.cursor()
-    c.execute("SELECT username FROM user")
-    data = c.fetchall()
-    conn.commit()
+    data = db_execute(conn, "SELECT username FROM user", {}, fetchall=True)  # fetchall()?
     return data
 
 
 def create_user(conn, user, password):
-    c = conn.cursor()
-    c.execute("INSERT INTO user VALUES  (:username, :current_index, :password)",
-              {'username': user, 'current_index': 0, 'password': password})
-    conn.commit()
-    return c.lastrowid
+    db_execute(conn, "INSERT INTO user VALUES  (:username, :current_index, :password)",
+               {'username': user, 'current_index': 0, 'password': password})
 
 
 def delete_user(conn, user):
@@ -107,9 +91,7 @@ def is_user_existing(conn, user):
     c.execute("SELECT username FROM user WHERE username =:username", {'username': user})
     data = c.fetchone()
     conn.commit()
-    if data is None:
-        return False
-    return True
+    return data is not None
 
 
 def create_user_table():
@@ -117,24 +99,14 @@ def create_user_table():
         os.mkdir("./db")
 
     conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(""" CREATE TABLE IF NOT EXISTS user (
-                username text PRIMARY KEY,
-                current_index integer,
-                password text
-                ); """)
-    conn.commit()
-
-    create_test_users(c, conn)
+    db_execute(conn, """ CREATE TABLE IF NOT EXISTS user (
+                    username text PRIMARY KEY,
+                    current_index integer,
+                    password text
+                    ); """, {})
+    create_test_users(conn)
 
 
-def create_test_users(c, conn):
-    # 2 predefined users: "joerg" and "felix"
-    c.execute("SELECT COUNT(*) FROM user")
-    if c.fetchone()[0] == 0:
-        create_user(conn, "joerg", generate_password_hash("elsa"))
-        create_user(conn, "felix", generate_password_hash("mady"))
-    conn.commit()
 def create_test_users(conn):
     # 2 predefined users: "joerg" and "felix". Created freshly for each session.
     # Permanent users are created on the admin endpoint.
