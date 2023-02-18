@@ -83,16 +83,11 @@ def create_user(conn, user, password):
 
 
 def delete_user(conn, user):
-    c = conn.cursor()
-    c.execute("DELETE FROM user WHERE username =:username", {'username': user})
-    conn.commit()
+    db_execute(conn, "DELETE FROM user WHERE username =:username", {'username': user})
 
 
 def is_user_existing(conn, user):
-    c = conn.cursor()
-    c.execute("SELECT username FROM user WHERE username =:username", {'username': user})
-    data = c.fetchone()
-    conn.commit()
+    data = db_execute(conn, "SELECT username FROM user WHERE username =:username", {'username': user})
     return data is not None
 
 
