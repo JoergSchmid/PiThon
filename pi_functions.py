@@ -7,12 +7,6 @@ from database import *
 # must be cut by the last digit in most functions.
 
 
-def pi_get_user_and_index():
-    user = request.args.get("user")
-    index = request.args.get("index")
-    return user, index
-
-
 def pi_get_next_ten_digits_from_index(index):
     mpmath.mp.dps = int(index) + 11
     if int(index) == 0:  # Special case for first digit before "."
