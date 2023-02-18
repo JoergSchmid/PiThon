@@ -124,7 +124,7 @@ def create_app(db_folder="./db/"):
             if "upto" in data and data.split("upto")[1].isnumeric():
                 return pi_get_digits_up_to(int(data.split("upto")[1])), status.OK
             if data is not None:
-                return pi_get_next_ten_for_user(data), status.OK
+                return pi_get_next_ten_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
         except ValueError:
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
@@ -138,7 +138,7 @@ def create_app(db_folder="./db/"):
         if data.isnumeric():
             return pi_get_digit_at_index(int(data)), status.OK
 
-        return pi_get_next_ten_for_user(data), status.OK
+        return pi_get_next_ten_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
 
     @app.delete('/pi/<user>')
     def pi_delete(user):

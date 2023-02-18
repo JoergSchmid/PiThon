@@ -59,8 +59,8 @@ def pi_get_digits_up_to(index):
     return str(mpmath.pi)[:-1]
 
 
-def pi_get_next_ten_for_user(user):
-    conn = create_connection(DB_PATH)
+def pi_get_next_ten_for_user(user, db_path):
+    conn = create_connection(db_path)
     current_index = get_current_index(conn, user)
     if current_index < 0:
         return "error: user not found"
