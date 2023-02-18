@@ -73,8 +73,9 @@ def get_user_data(conn, user):
 
 
 def get_all_user_names(conn):
-    data = db_execute(conn, "SELECT username FROM user", {}, fetchall=True)  # fetchall()?
-    return data
+    data = db_execute(conn, "SELECT username FROM user", {}, fetchall=True)
+    usernames = [i[0] for i in data]  # Returns a normal tuple instead of the list of tuples in data
+    return usernames
 
 
 def create_user(conn, user, password):
