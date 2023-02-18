@@ -14,6 +14,9 @@ def innit_app():
     create_user_table()
 
 
+def is_admin(user):
+    return user == database.TEST_USER_ADMIN[0]
+
 @auth.verify_password
 def verify_password(username, password):
     pw_hash = get_password(create_connection(DB_PATH), username)
