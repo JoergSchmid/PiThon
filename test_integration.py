@@ -10,6 +10,7 @@ USER_FELIX = ("felix", "mady")
 
 def test_client():
     with web.app.test_client() as c:
+        web.innit_app()
         test_standard_endpoints(c)
         test_get(c)
         test_delete(c)

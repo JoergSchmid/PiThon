@@ -10,6 +10,10 @@ auth = HTTPBasicAuth()
 status = http.HTTPStatus
 
 
+def innit_app():
+    create_user_table()
+
+
 @auth.verify_password
 def verify_password(username, password):
     pw_hash = get_password(create_connection(DB_PATH), username)
@@ -157,4 +161,5 @@ def pi_reset():
 
 
 if __name__ == "__main__":
+    innit_app()
     app.run()
