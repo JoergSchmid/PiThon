@@ -62,7 +62,7 @@ def get_password(conn, user):
 
 def change_password(conn, user, password):
     db_execute(conn, "UPDATE user SET password =:password WHERE username =:username",
-               {'password': password, 'username': user})
+               {'password': generate_password_hash(password), 'username': user})
 
 
 def get_user_data(conn, user):
@@ -77,7 +77,7 @@ def get_all_user_names(conn):
 
 def create_user(conn, user, password):
     db_execute(conn, "INSERT INTO user VALUES  (:username, :current_index, :password)",
-               {'username': user, 'current_index': 0, 'password': password})
+               {'username': user, 'current_index': 0, 'password': generate_password_hash(password)})
 
 
 def delete_user(conn, user):
