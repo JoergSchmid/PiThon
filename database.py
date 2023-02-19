@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash
 
 TEST_USER_ADMIN = ("joerg", "elsa")
 TEST_USER_STD = ("felix", "mady")
-FORBIDDEN_NAMES = ["getfile", "upto"]  # These words are commands.
+FORBIDDEN_NAMES = ["getfile", "upto", "get"]  # These words are commands.
 
 
 def create_connection(db_file):

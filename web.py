@@ -116,8 +116,8 @@ def create_app(storage_folder="./db/"):
         delete_user(conn, user)
         return {}, status.OK
 
-    @app.get('/get/<data>')
-    def get(data):
+    @app.get('/pi/get/<data>')
+    def pi_get(data):
         try:
             if data.isnumeric():
                 return Pi.get_digit_at_index(int(data)), status.OK
@@ -148,7 +148,7 @@ def create_app(storage_folder="./db/"):
         reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user)
         return {}, status.OK
 
-    @app.route("/pi_reset")
+    @app.route("/pi/reset")
     def pi_reset():
         with open(app.config[CONFIG_PI_TXT_PATH], "w") as f:
             f.truncate()
