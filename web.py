@@ -1,9 +1,9 @@
 import http
-from flask import Flask
+from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
-import database
-from pi_functions import *
+from database import *
+from irrational_digits import Pi
 from pathlib import Path
 
 status = http.HTTPStatus
@@ -13,7 +13,7 @@ CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
 
 def create_app(storage_folder="./db/"):
     """
-    Formated according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
+    Formatted according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
     :param storage_folder: folder the database should use
     :return: app
     """
@@ -26,7 +26,7 @@ def create_app(storage_folder="./db/"):
     create_user_table(app.config[CONFIG_DB_PATH])
 
     def is_admin(user):
-        return user == database.TEST_USER_ADMIN[0]
+        return user == TEST_USER_ADMIN[0]
 
     @auth.verify_password
     def verify_password(username, password):
@@ -67,7 +67,7 @@ def create_app(storage_folder="./db/"):
             if is_user_existing(conn, data["username"]):
                 return "User already exists.", status.CONFLICT
 
-            if data["username"] in database.FORBIDDEN_NAMES:
+            if data["username"] in FORBIDDEN_NAMES:
                 return "Illegal name.", status.CONFLICT
 
             create_user(conn, data["username"], data["password"])
@@ -120,27 +120,28 @@ def create_app(storage_folder="./db/"):
     def get(data):
         try:
             if data.isnumeric():
-                return pi_get_digit_at_index(int(data)), status.OK
+                return Pi.get_digit_at_index(int(data)), status.OK
             if data == "getfile":
-                return pi_get_all_from_file(app.config[CONFIG_PI_TXT_PATH]), status.OK
+                print(app.config[CONFIG_PI_TXT_PATH])
+                return Pi.get_all_from_file(app.config[CONFIG_PI_TXT_PATH]), status.OK
             if "upto" in data and data.split("upto")[1].isnumeric():
-                return pi_get_digits_up_to(int(data.split("upto")[1])), status.OK
+                return Pi.get_digits_up_to(int(data.split("upto")[1])), status.OK
             if data is not None:
-                return pi_get_next_ten_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+                return Pi.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
         except ValueError:
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
 
     @app.get('/pi')
     def pi():
-        return pi_get_last_ten_digits(app.config[CONFIG_PI_TXT_PATH]), status.OK
+        return Pi.get_last_ten_digits(app.config[CONFIG_PI_TXT_PATH]), status.OK
 
     @app.get('/pi/<data>')
     def pi_user(data):
         if data.isnumeric():
-            return pi_get_digit_at_index(int(data)), status.OK
+            return Pi.get_digit_at_index(int(data)), status.OK
 
-        return pi_get_next_ten_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+        return Pi.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
 
     @app.delete('/pi/<user>')
     def pi_delete(user):
