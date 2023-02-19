@@ -3,12 +3,13 @@ from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
-from irrational_digits import Pi
+from irrational_digits import Pi, E
 from pathlib import Path
 
 status = http.HTTPStatus
 CONFIG_DB_PATH = "DB_PATH"
 CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
+CONFIG_E_TXT_PATH = "PI_TXT_PATH"
 
 
 def create_app(storage_folder="./db/"):
@@ -20,6 +21,7 @@ def create_app(storage_folder="./db/"):
     app = Flask(__name__)
     app.config[CONFIG_DB_PATH] = Path(storage_folder) / "pi.db"
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
+    app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "pi.txt"
 
     auth = HTTPBasicAuth()
 
@@ -132,6 +134,22 @@ def create_app(storage_folder="./db/"):
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
 
+    @app.get('/e/get/<data>')
+    def e_get(data):
+        try:
+            if data.isnumeric():
+                return E.get_digit_at_index(int(data)), status.OK
+            if data == "getfile":
+                print(app.config[CONFIG_E_TXT_PATH])
+                return E.get_all_from_file(app.config[CONFIG_E_TXT_PATH]), status.OK
+            if "upto" in data and data.split("upto")[1].isnumeric():
+                return E.get_digits_up_to(int(data.split("upto")[1])), status.OK
+            if data is not None:
+                return E.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+        except ValueError:
+            return {"error": "invalid value"}, status.BAD_REQUEST
+        return {"error": "No known request sent"}, status.BAD_REQUEST
+
     @app.get('/pi')
     def pi():
         return Pi.get_last_ten_digits(app.config[CONFIG_PI_TXT_PATH]), status.OK
@@ -151,6 +169,28 @@ def create_app(storage_folder="./db/"):
     @app.route("/pi/reset")
     def pi_reset():
         with open(app.config[CONFIG_PI_TXT_PATH], "w") as f:
+            f.truncate()
+        return "reset"
+
+    @app.get('/e')
+    def e():
+        return E.get_last_ten_digits(app.config[CONFIG_E_TXT_PATH]), status.OK
+
+    @app.get('/e/<data>')
+    def e_user(data):
+        if data.isnumeric():
+            return E.get_digit_at_index(int(data)), status.OK
+
+        return E.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+
+    @app.delete('/e/<user>')
+    def e_delete(user):
+        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user)
+        return {}, status.OK
+
+    @app.route("/e/reset")
+    def e_reset():
+        with open(app.config[CONFIG_E_TXT_PATH], "w") as f:
             f.truncate()
         return "reset"
 
