@@ -11,6 +11,7 @@ from database import create_connection, get_current_index, raise_current_index
 
 class IrrationalDigits(ABC):
     name = ""
+    first_digit = ""
 
     @staticmethod
     @abstractmethod
@@ -67,13 +68,23 @@ class MpMathNumbers(IrrationalDigits):
 
     def get_number_with_accuracy(self, accuracy) -> str:
         if int(accuracy) == 0:  # Special case for first digit before "."
-            return "1"
+            return self.first_digit
         mpmath.mp.dps = accuracy + 2  # +2 for rounding
-        return str(self.get_mp_math_number())[:-1]
+        i_num = str(self.get_mp_math_number())
+        if self.check_for_0_at_end():
+            i_num += "0"
+        return str(i_num)[:-1]
+
+    def check_for_0_at_end(self):
+        mpmath.mp.dps += 1
+        if str(self.get_mp_math_number())[-2] == "0":
+            return True
+        return False
 
 
 class Pi(MpMathNumbers):
     name = "pi"
+    first_digit = "3"
 
     @staticmethod
     def get_mp_math_number():
@@ -82,6 +93,7 @@ class Pi(MpMathNumbers):
 
 class E(MpMathNumbers):
     name = "e"
+    first_digit = "2"
 
     @staticmethod
     def get_mp_math_number():
@@ -90,6 +102,7 @@ class E(MpMathNumbers):
 
 class Sqrt2(MpMathNumbers):
     name = "sqrt2"
+    first_digit = "1"
 
     @staticmethod
     def get_mp_math_number():
