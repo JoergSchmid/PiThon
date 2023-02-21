@@ -71,15 +71,8 @@ class MpMathNumbers(IrrationalDigits):
             return self.first_digit
         mpmath.mp.dps = accuracy + 2  # +2 for rounding
         i_num = str(self.get_mp_math_number())
-        if self.check_for_0_at_end():
-            i_num += "0"
+        i_num = i_num.ljust(accuracy + 3, "0")
         return str(i_num)[:-1]
-
-    def check_for_0_at_end(self):
-        mpmath.mp.dps += 1
-        if str(self.get_mp_math_number())[-2] == "0":
-            return True
-        return False
 
 
 class Pi(MpMathNumbers):
