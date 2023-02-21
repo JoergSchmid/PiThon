@@ -3,13 +3,14 @@ from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
-from irrational_digits import Pi, E
+from irrational_digits import Pi, E, Sqrt2
 from pathlib import Path
 
 status = http.HTTPStatus
 CONFIG_DB_PATH = "DB_PATH"
 CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
-CONFIG_E_TXT_PATH = "PI_TXT_PATH"
+CONFIG_E_TXT_PATH = "E_TXT_PATH"
+CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 
 
 def create_app(storage_folder="./db/"):
@@ -21,9 +22,13 @@ def create_app(storage_folder="./db/"):
     app = Flask(__name__)
     app.config[CONFIG_DB_PATH] = Path(storage_folder) / "pi.db"
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
-    app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "pi.txt"
+    app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
+    app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
 
     auth = HTTPBasicAuth()
+    i_pi = Pi()
+    i_e = E()
+    i_sqrt2 = Sqrt2()
 
     create_user_table(app.config[CONFIG_DB_PATH])
 
@@ -122,14 +127,13 @@ def create_app(storage_folder="./db/"):
     def pi_get(data):
         try:
             if data.isnumeric():
-                return Pi.get_digit_at_index(int(data)), status.OK
+                return Pi.get_digit_at_index(i_pi, int(data)), status.OK
             if data == "getfile":
-                print(app.config[CONFIG_PI_TXT_PATH])
                 return Pi.get_all_from_file(app.config[CONFIG_PI_TXT_PATH]), status.OK
             if "upto" in data and data.split("upto")[1].isnumeric():
-                return Pi.get_digits_up_to(int(data.split("upto")[1])), status.OK
+                return Pi.get_digits_up_to(i_pi, int(data.split("upto")[1])), status.OK
             if data is not None:
-                return Pi.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+                return Pi.get_next_ten_digits_for_user(i_pi, data, app.config[CONFIG_DB_PATH]), status.OK
         except ValueError:
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
@@ -138,59 +142,95 @@ def create_app(storage_folder="./db/"):
     def e_get(data):
         try:
             if data.isnumeric():
-                return E.get_digit_at_index(int(data)), status.OK
+                return E.get_digit_at_index(i_e, int(data)), status.OK
             if data == "getfile":
-                print(app.config[CONFIG_E_TXT_PATH])
                 return E.get_all_from_file(app.config[CONFIG_E_TXT_PATH]), status.OK
             if "upto" in data and data.split("upto")[1].isnumeric():
-                return E.get_digits_up_to(int(data.split("upto")[1])), status.OK
+                return E.get_digits_up_to(i_e, int(data.split("upto")[1])), status.OK
             if data is not None:
-                return E.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+                return E.get_next_ten_digits_for_user(i_e, data, app.config[CONFIG_DB_PATH]), status.OK
+        except ValueError:
+            return {"error": "invalid value"}, status.BAD_REQUEST
+        return {"error": "No known request sent"}, status.BAD_REQUEST
+
+    @app.get('/sqrt2/get/<data>')
+    def sqrt2_get(data):
+        try:
+            if data.isnumeric():
+                return Sqrt2.get_digit_at_index(i_sqrt2, int(data)), status.OK
+            if data == "getfile":
+                return Sqrt2.get_all_from_file(app.config[CONFIG_SQRT2_TXT_PATH]), status.OK
+            if "upto" in data and data.split("upto")[1].isnumeric():
+                return Sqrt2.get_digits_up_to(i_sqrt2, int(data.split("upto")[1])), status.OK
+            if data is not None:
+                return Sqrt2.get_next_ten_digits_for_user(i_sqrt2, data, app.config[CONFIG_DB_PATH]), status.OK
         except ValueError:
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
 
     @app.get('/pi')
     def pi():
-        return Pi.get_last_ten_digits(app.config[CONFIG_PI_TXT_PATH]), status.OK
+        return Pi.get_next_ten_digits(i_pi, app.config[CONFIG_PI_TXT_PATH]), status.OK
 
     @app.get('/pi/<data>')
     def pi_user(data):
         if data.isnumeric():
-            return Pi.get_digit_at_index(int(data)), status.OK
+            return Pi.get_digit_at_index(i_pi, int(data)), status.OK
 
-        return Pi.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+        return Pi.get_next_ten_digits_for_user(i_pi, data, app.config[CONFIG_DB_PATH]), status.OK
 
     @app.delete('/pi/<user>')
     def pi_delete(user):
-        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user)
+        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user, "pi")
         return {}, status.OK
 
     @app.route("/pi/reset")
     def pi_reset():
         with open(app.config[CONFIG_PI_TXT_PATH], "w") as f:
             f.truncate()
-        return "reset"
+        return "reset", status.OK
 
     @app.get('/e')
     def e():
-        return E.get_last_ten_digits(app.config[CONFIG_E_TXT_PATH]), status.OK
+        return E.get_next_ten_digits(i_e, app.config[CONFIG_E_TXT_PATH]), status.OK
 
     @app.get('/e/<data>')
     def e_user(data):
         if data.isnumeric():
-            return E.get_digit_at_index(int(data)), status.OK
+            return E.get_digit_at_index(i_e, int(data)), status.OK
 
-        return E.get_next_ten_digits_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
+        return E.get_next_ten_digits_for_user(i_e, data, app.config[CONFIG_DB_PATH]), status.OK
 
     @app.delete('/e/<user>')
     def e_delete(user):
-        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user)
+        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user, "e")
         return {}, status.OK
 
     @app.route("/e/reset")
     def e_reset():
         with open(app.config[CONFIG_E_TXT_PATH], "w") as f:
+            f.truncate()
+        return "reset"
+
+    @app.get('/sqrt2')
+    def sqrt2():
+        return Sqrt2.get_next_ten_digits(i_sqrt2, app.config[CONFIG_SQRT2_TXT_PATH]), status.OK
+
+    @app.get('/sqrt2/<data>')
+    def sqrt2_user(data):
+        if data.isnumeric():
+            return Sqrt2.get_digit_at_index(i_sqrt2, int(data)), status.OK
+
+        return Sqrt2.get_next_ten_digits_for_user(i_sqrt2, data, app.config[CONFIG_DB_PATH]), status.OK
+
+    @app.delete('/sqrt2/<user>')
+    def sqrt2_delete(user):
+        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user, "sqrt2")
+        return {}, status.OK
+
+    @app.route("/sqrt2/reset")
+    def sqrt2_reset():
+        with open(app.config[CONFIG_SQRT2_TXT_PATH], "w") as f:
             f.truncate()
         return "reset"
 
