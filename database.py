@@ -41,22 +41,24 @@ def db_execute(conn, query, parameters, fetchall=False):
     return data
 
 
-def get_current_index(conn, user):
-    index = db_execute(conn, "SELECT current_index FROM user WHERE username =:username", {'username': user})
+def get_current_index(conn, user, num):
+    index = None
+    index = db_execute(conn, f"SELECT {num}_current_index FROM user WHERE username =:username", {'username': user})
     if index is None:
         return -1
     else:
         return index[0]
 
 
-def raise_current_index(conn, user, increment):
-    updated_index = get_current_index(conn, user) + increment
-    db_execute(conn, "UPDATE user SET current_index =:index WHERE username =:username",
-               {'index': updated_index, 'username': user})
+def raise_current_index(conn, user, increment, num):
+    updated_index = get_current_index(conn, user, num) + increment
+    db_execute(conn, f"UPDATE user SET {num}_current_index =:index WHERE username =:username",
+                {'index': updated_index, 'username': user})
 
 
-def reset_current_index(conn, user):
-    db_execute(conn, "UPDATE user SET current_index =:index WHERE username =:username", {'index': 0, 'username': user})
+def reset_current_index(conn, user, num):
+    db_execute(conn, f"UPDATE user SET {num}_current_index =:index WHERE username =:username",
+                    {'index': 0, 'username': user})
 
 
 def get_password(conn, user):
@@ -85,8 +87,10 @@ def get_all_user_names(conn):
 def create_user(conn, user, password):
     if is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
         return None
-    db_execute(conn, "INSERT INTO user VALUES  (:username, :current_index, :password)",
-               {'username': user, 'current_index': 0, 'password': generate_password_hash(password)})
+    db_execute(conn, "INSERT INTO user VALUES "
+                     "(:username, :pi_current_index, :e_current_index, :sqrt2_current_index, :password)",
+               {'username': user, 'pi_current_index': 0, 'e_current_index': 0, 'sqrt2_current_index': 0,
+                'password': generate_password_hash(password)})
 
 
 def delete_user(conn, user):
@@ -102,7 +106,9 @@ def create_user_table(path):
     conn = create_connection(path)
     db_execute(conn, """ CREATE TABLE IF NOT EXISTS user (
                     username text PRIMARY KEY,
-                    current_index integer,
+                    pi_current_index integer,
+                    e_current_index integer,
+                    sqrt2_current_index integer,
                     password text
                     ); """, {})
     create_test_users(conn)
