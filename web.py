@@ -3,7 +3,7 @@ from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
-from irrational_digits import Pi, E, Sqrt2
+from irrational_digits import Pi, E, Sqrt2, IrrationalDigits
 from pathlib import Path
 
 status = http.HTTPStatus
@@ -11,6 +11,42 @@ CONFIG_DB_PATH = "DB_PATH"
 CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
 CONFIG_E_TXT_PATH = "E_TXT_PATH"
 CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
+
+
+def create_standard_get_view(number_class, txt_path):
+    number_instance = number_class()
+
+    def get_view():
+        return number_instance.get_next_ten_digits(txt_path), status.OK
+
+    return get_view
+
+
+def create_index_or_user_view(number_class, txt_path):
+    number_instance = number_class()
+
+    def index_or_user_view(data):
+        if data.isnumeric():
+            return number_instance.get_digit_at_index(int(data)), status.OK
+
+        return number_instance.get_next_ten_digits_for_user(data, txt_path), status.OK
+
+
+def create_delete_user_index_view(number_class, db_path):
+
+    def delete_user_index_view(user):
+        reset_current_index(create_connection(db_path), user, number_class.name)
+        return {}, status.OK
+    return delete_user_index_view
+
+def create_number_reset_view(txt_path):
+
+    def number_reset_view():
+        with open(txt_path, "w") as f:
+            f.truncate()
+        return "reset", status.OK
+
+    return number_reset_view
 
 
 def create_app(storage_folder="./db/"):
@@ -31,6 +67,20 @@ def create_app(storage_folder="./db/"):
     i_sqrt2 = Sqrt2()
 
     create_user_table(app.config[CONFIG_DB_PATH])
+
+    number_configs = [(Pi, app.config[CONFIG_PI_TXT_PATH]),
+                      (E, app.config[CONFIG_E_TXT_PATH]),
+                      (Sqrt2, app.config[CONFIG_SQRT2_TXT_PATH])]
+    for number, txt_path in number_configs:
+        app.add_url_rule(f"/{number.name}", view_func=create_standard_get_view(number, txt_path),
+                         endpoint=f"{number.name}_standard_get")
+        app.add_url_rule(f"/{number.name}/<data>", view_func=create_index_or_user_view(number, txt_path),
+                         endpoint=f"{number.name}_index_or_user")
+        app.add_url_rule(f"/{number.name}/<user>", view_func=create_delete_user_index_view(number, app.config[CONFIG_DB_PATH]),
+                         methods=["DELETE"],
+                         endpoint=f"{number.name}_delete_user_index")
+        app.add_url_rule(f"/{number.name}/reset", view_func=create_number_reset_view(txt_path),
+                         endpoint=f"{number.name}_reset")
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
@@ -168,71 +218,7 @@ def create_app(storage_folder="./db/"):
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
 
-    @app.get('/pi')
-    def pi():
-        return Pi.get_next_ten_digits(i_pi, app.config[CONFIG_PI_TXT_PATH]), status.OK
 
-    @app.get('/pi/<data>')
-    def pi_user(data):
-        if data.isnumeric():
-            return Pi.get_digit_at_index(i_pi, int(data)), status.OK
-
-        return Pi.get_next_ten_digits_for_user(i_pi, data, app.config[CONFIG_DB_PATH]), status.OK
-
-    @app.delete('/pi/<user>')
-    def pi_delete(user):
-        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user, "pi")
-        return {}, status.OK
-
-    @app.route("/pi/reset")
-    def pi_reset():
-        with open(app.config[CONFIG_PI_TXT_PATH], "w") as f:
-            f.truncate()
-        return "reset", status.OK
-
-    @app.get('/e')
-    def e():
-        return E.get_next_ten_digits(i_e, app.config[CONFIG_E_TXT_PATH]), status.OK
-
-    @app.get('/e/<data>')
-    def e_user(data):
-        if data.isnumeric():
-            return E.get_digit_at_index(i_e, int(data)), status.OK
-
-        return E.get_next_ten_digits_for_user(i_e, data, app.config[CONFIG_DB_PATH]), status.OK
-
-    @app.delete('/e/<user>')
-    def e_delete(user):
-        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user, "e")
-        return {}, status.OK
-
-    @app.route("/e/reset")
-    def e_reset():
-        with open(app.config[CONFIG_E_TXT_PATH], "w") as f:
-            f.truncate()
-        return "reset"
-
-    @app.get('/sqrt2')
-    def sqrt2():
-        return Sqrt2.get_next_ten_digits(i_sqrt2, app.config[CONFIG_SQRT2_TXT_PATH]), status.OK
-
-    @app.get('/sqrt2/<data>')
-    def sqrt2_user(data):
-        if data.isnumeric():
-            return Sqrt2.get_digit_at_index(i_sqrt2, int(data)), status.OK
-
-        return Sqrt2.get_next_ten_digits_for_user(i_sqrt2, data, app.config[CONFIG_DB_PATH]), status.OK
-
-    @app.delete('/sqrt2/<user>')
-    def sqrt2_delete(user):
-        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user, "sqrt2")
-        return {}, status.OK
-
-    @app.route("/sqrt2/reset")
-    def sqrt2_reset():
-        with open(app.config[CONFIG_SQRT2_TXT_PATH], "w") as f:
-            f.truncate()
-        return "reset"
 
     return app
 
