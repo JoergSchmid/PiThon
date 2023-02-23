@@ -39,6 +39,7 @@ def create_delete_user_index_view(number_class, db_path):
     def delete_user_index_view(user):
         reset_current_index(create_connection(db_path), user, number_class.name)
         return {}, status.OK
+
     return delete_user_index_view
 
 
@@ -50,6 +51,26 @@ def create_number_reset_view(txt_path):
         return "reset", status.OK
 
     return number_reset_view
+
+
+def create_get_view(number_class, txt_path, db_path):
+    number_instance = number_class()
+
+    def get_view(data):
+        try:
+            if data.isnumeric():
+                return number_class.get_digit_at_index(number_instance, int(data)), status.OK
+            if data == "getfile":
+                return number_class.get_all_from_file(txt_path), status.OK
+            if "upto" in data and data.split("upto")[1].isnumeric():
+                return number_class.get_digits_up_to(number_instance, int(data.split("upto")[1])), status.OK
+            if data is not None:
+                return number_class.get_next_ten_digits_for_user(number_instance, data, db_path), status.OK
+        except ValueError:
+            return {"error": "invalid value"}, status.BAD_REQUEST
+        return {"error": "No known request sent"}, status.BAD_REQUEST
+
+    return get_view
 
 
 def create_app(storage_folder="./db/"):
@@ -65,9 +86,6 @@ def create_app(storage_folder="./db/"):
     app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
 
     auth = HTTPBasicAuth()
-    i_pi = Pi()
-    i_e = E()
-    i_sqrt2 = Sqrt2()
 
     create_user_table(app.config[CONFIG_DB_PATH])
 
@@ -85,6 +103,9 @@ def create_app(storage_folder="./db/"):
                          methods=["DELETE"], endpoint=f"{number.name}_delete_user_index")
         app.add_url_rule(f"/{number.name}/reset", view_func=create_number_reset_view(txt_path),
                          endpoint=f"{number.name}_reset")
+        app.add_url_rule(f"/{number.name}/get/<data>",
+                         view_func=create_get_view(number, txt_path, app.config[CONFIG_DB_PATH]),
+                         endpoint=f"{number.name}_get")
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
@@ -183,51 +204,6 @@ def create_app(storage_folder="./db/"):
 
         delete_user(conn, user)
         return {}, status.OK
-
-    @app.get('/pi/get/<data>')
-    def pi_get(data):
-        try:
-            if data.isnumeric():
-                return Pi.get_digit_at_index(i_pi, int(data)), status.OK
-            if data == "getfile":
-                return Pi.get_all_from_file(app.config[CONFIG_PI_TXT_PATH]), status.OK
-            if "upto" in data and data.split("upto")[1].isnumeric():
-                return Pi.get_digits_up_to(i_pi, int(data.split("upto")[1])), status.OK
-            if data is not None:
-                return Pi.get_next_ten_digits_for_user(i_pi, data, app.config[CONFIG_DB_PATH]), status.OK
-        except ValueError:
-            return {"error": "invalid value"}, status.BAD_REQUEST
-        return {"error": "No known request sent"}, status.BAD_REQUEST
-
-    @app.get('/e/get/<data>')
-    def e_get(data):
-        try:
-            if data.isnumeric():
-                return E.get_digit_at_index(i_e, int(data)), status.OK
-            if data == "getfile":
-                return E.get_all_from_file(app.config[CONFIG_E_TXT_PATH]), status.OK
-            if "upto" in data and data.split("upto")[1].isnumeric():
-                return E.get_digits_up_to(i_e, int(data.split("upto")[1])), status.OK
-            if data is not None:
-                return E.get_next_ten_digits_for_user(i_e, data, app.config[CONFIG_DB_PATH]), status.OK
-        except ValueError:
-            return {"error": "invalid value"}, status.BAD_REQUEST
-        return {"error": "No known request sent"}, status.BAD_REQUEST
-
-    @app.get('/sqrt2/get/<data>')
-    def sqrt2_get(data):
-        try:
-            if data.isnumeric():
-                return Sqrt2.get_digit_at_index(i_sqrt2, int(data)), status.OK
-            if data == "getfile":
-                return Sqrt2.get_all_from_file(app.config[CONFIG_SQRT2_TXT_PATH]), status.OK
-            if "upto" in data and data.split("upto")[1].isnumeric():
-                return Sqrt2.get_digits_up_to(i_sqrt2, int(data.split("upto")[1])), status.OK
-            if data is not None:
-                return Sqrt2.get_next_ten_digits_for_user(i_sqrt2, data, app.config[CONFIG_DB_PATH]), status.OK
-        except ValueError:
-            return {"error": "invalid value"}, status.BAD_REQUEST
-        return {"error": "No known request sent"}, status.BAD_REQUEST
 
     return app
 
