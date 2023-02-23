@@ -22,14 +22,16 @@ def create_standard_get_view(number_class, txt_path):
     return get_view
 
 
-def create_index_or_user_view(number_class, txt_path):
+def create_index_or_user_view(number_class, db_path):
     number_instance = number_class()
 
     def index_or_user_view(data):
         if data.isnumeric():
             return number_instance.get_digit_at_index(int(data)), status.OK
 
-        return number_instance.get_next_ten_digits_for_user(data, txt_path), status.OK
+        return number_instance.get_next_ten_digits_for_user(data, db_path), status.OK
+
+    return index_or_user_view
 
 
 def create_delete_user_index_view(number_class, db_path):
@@ -38,6 +40,7 @@ def create_delete_user_index_view(number_class, db_path):
         reset_current_index(create_connection(db_path), user, number_class.name)
         return {}, status.OK
     return delete_user_index_view
+
 
 def create_number_reset_view(txt_path):
 
@@ -74,11 +77,12 @@ def create_app(storage_folder="./db/"):
     for number, txt_path in number_configs:
         app.add_url_rule(f"/{number.name}", view_func=create_standard_get_view(number, txt_path),
                          endpoint=f"{number.name}_standard_get")
-        app.add_url_rule(f"/{number.name}/<data>", view_func=create_index_or_user_view(number, txt_path),
+        app.add_url_rule(f"/{number.name}/<data>",
+                         view_func=create_index_or_user_view(number, app.config[CONFIG_DB_PATH]),
                          endpoint=f"{number.name}_index_or_user")
-        app.add_url_rule(f"/{number.name}/<user>", view_func=create_delete_user_index_view(number, app.config[CONFIG_DB_PATH]),
-                         methods=["DELETE"],
-                         endpoint=f"{number.name}_delete_user_index")
+        app.add_url_rule(f"/{number.name}/<user>",
+                         view_func=create_delete_user_index_view(number, app.config[CONFIG_DB_PATH]),
+                         methods=["DELETE"], endpoint=f"{number.name}_delete_user_index")
         app.add_url_rule(f"/{number.name}/reset", view_func=create_number_reset_view(txt_path),
                          endpoint=f"{number.name}_reset")
 
@@ -224,8 +228,6 @@ def create_app(storage_folder="./db/"):
         except ValueError:
             return {"error": "invalid value"}, status.BAD_REQUEST
         return {"error": "No known request sent"}, status.BAD_REQUEST
-
-
 
     return app
 
