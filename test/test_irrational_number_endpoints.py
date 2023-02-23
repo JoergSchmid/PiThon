@@ -33,40 +33,18 @@ def test_users_can_query_digits_independently(client, endpoint, first_ten, next_
     assert client.get(f"{endpoint}/get/felix").data == first_ten
 
 
-def test_pi_get_special_options(client):
-    assert client.get("/pi/get/0").data == b"3"
-    assert client.get("/pi/get/4").data == b"5"
-
-    assert client.get("/pi/get/upto4").data == b"3.1415"
-
-    client.get("/pi/reset")
-    assert client.get("/pi/get/getfile").data == b"empty"
-    client.get("/pi")
-    assert client.get("/pi/get/getfile").data == PI_FIRST_10
-
-
-def test_e_get_special_options(client):
-    assert client.get("/e/get/0").data == b"2"
-    assert client.get("/e/get/2").data == b"1"
-
-    assert client.get("/e/get/upto3").data == b"2.718"
-
-    client.get("/e/reset")
-    assert client.get("/e/get/getfile").data == b"empty"
-    client.get("/e")
-    assert client.get("/e/get/getfile").data == b"2.7182818284"
-
-
-def test_sqrt2_get_special_options(client):
-    assert client.get("/sqrt2/get/0").data == b"1"
-    assert client.get("/sqrt2/get/7").data == b"5"
-
-    assert client.get("/sqrt2/get/upto4").data == b"1.4142"
-
-    client.get("/sqrt2/reset")
-    assert client.get("/sqrt2/get/getfile").data == b"empty"
-    client.get("/sqrt2")
-    assert client.get("/sqrt2/get/getfile").data == b"1.4142135623"
+@pytest.mark.parametrize("endpoint,first_ten", [("/pi", PI_FIRST_10),
+                                                ("/e", E_FIRST_10),
+                                                ("/sqrt2", SQRT2_FIRST_10)])
+def test_get_special_options(client, endpoint, first_ten):
+    assert client.get(f"{endpoint}/get/0").data == first_ten[0:1]
+    for i in range(1, 11):
+        assert client.get(f"{endpoint}/get/{i}").data == first_ten[i+1:i+2]  # byte strings have different indexing
+    assert client.get(f"{endpoint}/get/upto4").data == first_ten[:6]
+    client.get(f"{endpoint}/reset")
+    assert client.get(f"{endpoint}/get/getfile").data == b"empty"
+    client.get(f"{endpoint}")
+    assert client.get(f"{endpoint}/get/getfile").data == first_ten
 
 
 @pytest.mark.parametrize("endpoint,first_ten,next_ten", [("/pi", PI_FIRST_10, PI_NEXT_10),
