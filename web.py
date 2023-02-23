@@ -1,5 +1,5 @@
 import http
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
@@ -96,6 +96,13 @@ def create_app(storage_folder="./db/"):
     @auth.login_required
     def home():
         return f"Welcome home, {auth.current_user()}!"
+
+    @app.get('/digits/<file>')
+    def download_file(file):
+        path = f"C:/gitroot/PiThon/db/{file}.txt"
+        if os.path.exists(path):
+            return send_file(path, as_attachment=True), status.OK
+        return "File not found", status.NOT_FOUND
 
     @app.get('/admin/users')
     @auth.login_required
