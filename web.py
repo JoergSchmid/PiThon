@@ -124,7 +124,7 @@ def create_app(storage_folder="./db/"):
 
     @app.get('/digits/<file>')
     def download_file(file):
-        path = f"C:/gitroot/PiThon/db/{file}.txt"
+        path = f"./db/{file}.txt"
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
         return "File not found", status.NOT_FOUND
