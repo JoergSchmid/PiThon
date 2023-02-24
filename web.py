@@ -1,32 +1,114 @@
 import http
-from flask import Flask
+from flask import Flask, request, send_file
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
-import database
-from pi_functions import *
+from database import *
+from irrational_digits import Pi, E, Sqrt2, IrrationalDigits
 from pathlib import Path
 
 status = http.HTTPStatus
 CONFIG_DB_PATH = "DB_PATH"
 CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
+CONFIG_E_TXT_PATH = "E_TXT_PATH"
+CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
+
+CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
+
+
+def create_standard_get_view(number_class, txt_path):
+    number_instance = number_class()
+
+    def get_view():
+        return number_instance.get_next_ten_digits(txt_path), status.OK
+
+    return get_view
+
+
+def create_index_or_user_view(number_class, db_path):
+    number_instance = number_class()
+
+    def index_or_user_view(data):
+        if data.isnumeric():
+            return number_instance.get_digit_at_index(int(data)), status.OK
+
+        return number_instance.get_next_ten_digits_for_user(data, db_path), status.OK
+
+    return index_or_user_view
+
+
+def create_delete_user_index_view(number_class, db_path):
+    def delete_user_index_view(user):
+        reset_current_index(create_connection(db_path), user, number_class.name)
+        return {}, status.OK
+
+    return delete_user_index_view
+
+
+def create_number_reset_view(txt_path):
+    def number_reset_view():
+        with open(txt_path, "w") as f:
+            f.truncate()
+        return "reset", status.OK
+
+    return number_reset_view
+
+
+def create_get_view(number_class, txt_path, db_path):
+    number_instance = number_class()
+
+    def get_view(data):
+        try:
+            if data.isnumeric():
+                return number_class.get_digit_at_index(number_instance, int(data)), status.OK
+            if data == "getfile":
+                return number_class.get_all_from_file(txt_path), status.OK
+            if "upto" in data and data.split("upto")[1].isnumeric():
+                return number_class.get_digits_up_to(number_instance, int(data.split("upto")[1])), status.OK
+            if data is not None:
+                return number_class.get_next_ten_digits_for_user(number_instance, data, db_path), status.OK
+        except ValueError:
+            return {"error": "invalid value"}, status.BAD_REQUEST
+        return {"error": "No known request sent"}, status.BAD_REQUEST
+
+    return get_view
 
 
 def create_app(storage_folder="./db/"):
     """
-    Formated according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
+    Formatted according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
     :param storage_folder: folder the database should use
     :return: app
     """
     app = Flask(__name__)
     app.config[CONFIG_DB_PATH] = Path(storage_folder) / "pi.db"
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
+    app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
+    app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
 
     auth = HTTPBasicAuth()
 
     create_user_table(app.config[CONFIG_DB_PATH])
 
+    number_configs = [(Pi, app.config[CONFIG_PI_TXT_PATH]),
+                      (E, app.config[CONFIG_E_TXT_PATH]),
+                      (Sqrt2, app.config[CONFIG_SQRT2_TXT_PATH])]
+    for number, txt_path in number_configs:
+        app.add_url_rule(f"/{number.name}", view_func=create_standard_get_view(number, txt_path),
+                         endpoint=f"{number.name}_standard_get")
+        app.add_url_rule(f"/{number.name}/<data>",
+                         view_func=create_index_or_user_view(number, app.config[CONFIG_DB_PATH]),
+                         endpoint=f"{number.name}_index_or_user")
+        app.add_url_rule(f"/{number.name}/<user>",
+                         view_func=create_delete_user_index_view(number, app.config[CONFIG_DB_PATH]),
+                         methods=["DELETE"], endpoint=f"{number.name}_delete_user_index")
+        app.add_url_rule(f"/{number.name}/reset", view_func=create_number_reset_view(txt_path),
+                         endpoint=f"{number.name}_reset")
+        app.add_url_rule(f"/{number.name}/get/<data>",
+                         view_func=create_get_view(number, txt_path, app.config[CONFIG_DB_PATH]),
+                         endpoint=f"{number.name}_get")
+
     def is_admin(user):
-        return user == database.TEST_USER_ADMIN[0]
+        return user == TEST_USER_ADMIN[0]
 
     @auth.verify_password
     def verify_password(username, password):
@@ -39,6 +121,15 @@ def create_app(storage_folder="./db/"):
     @auth.login_required
     def home():
         return f"Welcome home, {auth.current_user()}!"
+
+    @app.get('/digits/<number_name>')
+    def download_file(number_name):
+        if number_name not in CONFIG_TXT_PATH_MAPPING.keys():
+            return "Unknown number", status.BAD_REQUEST
+        path = app.config[CONFIG_TXT_PATH_MAPPING[number_name]]
+        if os.path.exists(path):
+            return send_file(path, as_attachment=True), status.OK
+        return "File not found", status.NOT_FOUND
 
     @app.get('/admin/users')
     @auth.login_required
@@ -67,7 +158,7 @@ def create_app(storage_folder="./db/"):
             if is_user_existing(conn, data["username"]):
                 return "User already exists.", status.CONFLICT
 
-            if data["username"] in database.FORBIDDEN_NAMES:
+            if data["username"] in FORBIDDEN_NAMES:
                 return "Illegal name.", status.CONFLICT
 
             create_user(conn, data["username"], data["password"])
@@ -115,43 +206,6 @@ def create_app(storage_folder="./db/"):
 
         delete_user(conn, user)
         return {}, status.OK
-
-    @app.get('/get/<data>')
-    def get(data):
-        try:
-            if data.isnumeric():
-                return pi_get_digit_at_index(int(data)), status.OK
-            if data == "getfile":
-                return pi_get_all_from_file(app.config[CONFIG_PI_TXT_PATH]), status.OK
-            if "upto" in data and data.split("upto")[1].isnumeric():
-                return pi_get_digits_up_to(int(data.split("upto")[1])), status.OK
-            if data is not None:
-                return pi_get_next_ten_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
-        except ValueError:
-            return {"error": "invalid value"}, status.BAD_REQUEST
-        return {"error": "No known request sent"}, status.BAD_REQUEST
-
-    @app.get('/pi')
-    def pi():
-        return pi_get_last_ten_digits(app.config[CONFIG_PI_TXT_PATH]), status.OK
-
-    @app.get('/pi/<data>')
-    def pi_user(data):
-        if data.isnumeric():
-            return pi_get_digit_at_index(int(data)), status.OK
-
-        return pi_get_next_ten_for_user(data, app.config[CONFIG_DB_PATH]), status.OK
-
-    @app.delete('/pi/<user>')
-    def pi_delete(user):
-        reset_current_index(create_connection(app.config[CONFIG_DB_PATH]), user)
-        return {}, status.OK
-
-    @app.route("/pi_reset")
-    def pi_reset():
-        with open(app.config[CONFIG_PI_TXT_PATH], "w") as f:
-            f.truncate()
-        return "reset"
 
     return app
 
