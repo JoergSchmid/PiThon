@@ -59,3 +59,8 @@ def test_delete_resets_index(client, endpoint, first_ten, next_ten):
     assert client.get(f"{endpoint}/felix").data == first_ten
     client.delete(f"{endpoint}/felix")
     assert client.get(f"{endpoint}/felix").data == first_ten
+
+
+def test_if_no_cache_is_set_correctly(client):
+    assert client.get("/e").headers['Cache-Control'] == "no-store, max-age=0"
+    assert client.get("/admin/users").headers['Cache-Control'] == "no-store, max-age=0"
