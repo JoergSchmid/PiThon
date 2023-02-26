@@ -3,7 +3,7 @@ from flask import Flask, request, send_file
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
-from irrational_digits import Pi, E, Sqrt2, IrrationalDigits
+from irrational_digits import Pi, E, Sqrt2
 from pathlib import Path
 
 status = http.HTTPStatus
@@ -206,6 +206,12 @@ def create_app(storage_folder="./db/"):
 
         delete_user(conn, user)
         return {}, status.OK
+
+    @app.after_request
+    def add_header(response):
+        if request.method == "GET":
+            response.headers['Cache-Control'] = 'no-store, max-age=0'
+        return response
 
     return app
 
