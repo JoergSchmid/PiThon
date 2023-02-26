@@ -22,6 +22,14 @@ def create_standard_get_view(number_class, txt_path):
     return get_view
 
 
+def create_get_database_view(number_class, db_path):
+
+    def get_view(digit_index):
+        return get_digit_from_digit_index(create_connection(db_path), number_class, digit_index), status.OK
+
+    return get_view
+
+
 def create_index_or_user_view(number_class, db_path):
     number_instance = number_class()
 
@@ -106,6 +114,9 @@ def create_app(storage_folder="./db/"):
         app.add_url_rule(f"/{number.name}/get/<data>",
                          view_func=create_get_view(number, txt_path, app.config[CONFIG_DB_PATH]),
                          endpoint=f"{number.name}_get")
+        app.add_url_rule(f"/db/{number.name}/<digit_index>",
+                         view_func=create_get_database_view(number, app.config[CONFIG_DB_PATH]),
+                         endpoint=f"{number.name}_get_database")
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]

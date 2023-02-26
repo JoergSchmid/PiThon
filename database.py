@@ -109,6 +109,27 @@ def is_user_existing(conn, user):
     return data is not None
 
 
+def get_digit_from_digit_index(conn, number, digit_index):
+    def get_data():
+        return db_execute(conn, "SELECT digit FROM number_digit WHERE number =:number AND digit_index =:digit_index",
+                          {'number': number.name, 'digit_index': digit_index})
+
+    data = get_data()
+    if data is None:
+        create_digit_index_up_to(conn, number, digit_index)
+        data = get_data()
+    return str(data[0])
+
+
+def create_digit_index_up_to(conn, number, digit_index):
+    old_entry_count = int(db_execute(conn, "SELECT COUNT(*) FROM number_digit WHERE number =:number",
+                                     {'number': number.name})[0])
+    for i in range(old_entry_count, int(digit_index) + 1):
+        db_execute(conn, "INSERT INTO number_digit (number, digit_index, digit)"
+                         "VALUES (:number, :digit_index, :digit)",
+                   {'number': number.name, 'digit_index': i, 'digit': number().get_digit_at_index(i)})
+
+
 def create_db_tables(path):
     conn = create_connection(path)
     create_user_table(conn)

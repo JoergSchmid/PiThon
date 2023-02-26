@@ -39,7 +39,7 @@ def test_users_can_query_digits_independently(client, endpoint, first_ten, next_
 def test_get_special_options(client, endpoint, first_ten):
     assert client.get(f"{endpoint}/get/0").data == first_ten[0:1]
     for i in range(1, 11):
-        assert client.get(f"{endpoint}/get/{i}").data == first_ten[i+1:i+2]  # byte strings have different indexing
+        assert client.get(f"{endpoint}/get/{i}").data == first_ten[i + 1:i + 2]  # byte strings have different indexing
     assert client.get(f"{endpoint}/get/upto4").data == first_ten[:6]
     client.get(f"{endpoint}/reset")
     assert client.get(f"{endpoint}/get/getfile").data == b"empty"
@@ -59,6 +59,15 @@ def test_delete_resets_index(client, endpoint, first_ten, next_ten):
     assert client.get(f"{endpoint}/felix").data == first_ten
     client.delete(f"{endpoint}/felix")
     assert client.get(f"{endpoint}/felix").data == first_ten
+
+
+@pytest.mark.parametrize("endpoint,first_ten", [("/pi", PI_FIRST_10),
+                                                ("/e", E_FIRST_10),
+                                                ("/sqrt2", SQRT2_FIRST_10)])
+def test_db_number_digit(client, endpoint, first_ten):
+    assert client.get(f"/db{endpoint}/0").data == first_ten[0:1]
+    for i in range(2, 5):
+        assert client.get(f"/db{endpoint}/{i}").data == first_ten[i+1:i+2]
 
 
 def test_if_no_cache_is_set_correctly(client):
