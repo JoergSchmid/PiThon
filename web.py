@@ -23,7 +23,6 @@ def create_standard_get_view(number_class, txt_path):
 
 
 def create_get_database_view(number_class, db_path):
-
     def get_view(digit_index):
         return get_digit_from_digit_index(create_connection(db_path), number_class, digit_index), status.OK
 
@@ -43,7 +42,6 @@ def create_index_or_user_view(number_class, db_path):
 
 
 def create_delete_user_index_view(number_class, db_path):
-
     def delete_user_index_view(user):
         reset_current_index(create_connection(db_path), user, number_class.name)
         return {}, status.OK
@@ -51,8 +49,15 @@ def create_delete_user_index_view(number_class, db_path):
     return delete_user_index_view
 
 
-def create_number_reset_view(txt_path):
+def create_delete_all_user_indices_view(db_path):
+    def delete_all_user_indices_view(user):
+        reset_all_current_indices_of_user(create_connection(db_path), user)
+        return {}, status.OK
 
+    return delete_all_user_indices_view
+
+
+def create_number_reset_view(txt_path):
     def number_reset_view():
         with open(txt_path, "w") as f:
             f.truncate()
@@ -109,6 +114,9 @@ def create_app(storage_folder="./db/"):
         app.add_url_rule(f"/{number.name}/<user>",
                          view_func=create_delete_user_index_view(number, app.config[CONFIG_DB_PATH]),
                          methods=["DELETE"], endpoint=f"{number.name}_delete_user_index")
+        app.add_url_rule(f"/reset/<user>",
+                         view_func=create_delete_all_user_indices_view(app.config[CONFIG_DB_PATH]),
+                         methods=["DELETE"], endpoint=f"{number.name}_delete_all_user_indices")
         app.add_url_rule(f"/{number.name}/reset", view_func=create_number_reset_view(txt_path),
                          endpoint=f"{number.name}_reset")
         app.add_url_rule(f"/{number.name}/get/<data>",
@@ -198,6 +206,15 @@ def create_app(storage_folder="./db/"):
             return {"username": user, "password": "***"}, status.CREATED
         except (KeyError, ValueError):
             return "Invalid Request", status.BAD_REQUEST
+
+    @app.delete('/admin/reset_all_indices')
+    @auth.login_required
+    def admin_reset_all_indices():
+        if not is_admin(auth.current_user()):
+            return "Unauthorized. Admin access only.", status.FORBIDDEN
+        
+        reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
+        return "All indices are reset.", status.OK
 
     @app.delete('/admin/users/<user>')
     @auth.login_required

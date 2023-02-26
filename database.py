@@ -43,9 +43,9 @@ def db_execute(conn, query, parameters, fetchall=False):
 
 
 def get_current_index(conn, user, num):
-    index = db_execute(conn, f"SELECT current_index FROM number_index "
-                             f"INNER JOIN user ON user.user_id = number_index.user_id "
-                             f"WHERE username =:username AND number =:number",
+    index = db_execute(conn, "SELECT current_index FROM number_index "
+                             "INNER JOIN user ON user.user_id = number_index.user_id "
+                             "WHERE username =:username AND number =:number",
                        {'username': user, 'number': num})
     if index is None:
         return -1
@@ -55,17 +55,27 @@ def get_current_index(conn, user, num):
 
 def raise_current_index(conn, user, increment, num):
     updated_index = get_current_index(conn, user, num) + increment
-    db_execute(conn, f"UPDATE number_index SET current_index =:index "
-                     f"WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
-                     f"AND number =:number",
+    db_execute(conn, "UPDATE number_index SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
+                     "AND number =:number",
                {'index': updated_index, 'username': user, 'number': num})
 
 
 def reset_current_index(conn, user, num):
-    db_execute(conn, f"UPDATE number_index SET current_index =:index "
-                     f"WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
-                     f"AND number =:number",
+    db_execute(conn, "UPDATE number_index SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
+                     "AND number =:number",
                {'index': 0, 'username': user, 'number': num})
+
+
+def reset_all_current_indices_of_user(conn, user):
+    db_execute(conn, "UPDATE number_index SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM user WHERE username =:username)",
+               {'username': user, 'index': 0})
+
+
+def reset_all_current_indices(conn):
+    db_execute(conn, "UPDATE number_index SET current_index =:index", {'index': 0})
 
 
 def get_password(conn, user):
