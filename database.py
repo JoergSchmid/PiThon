@@ -107,8 +107,8 @@ def delete_user(conn, user):
     user_id = db_execute(conn, "SELECT user_id FROM user WHERE username =:username", {'username': user})
     if user_id is None:
         return
-    db_execute(conn, "DELETE FROM user WHERE username =:username", {'username': user})
-    db_execute(conn, "DELETE FROM number_index WHERE user_id =:user_id", {'user_id': user_id})
+    db_execute(conn, "DELETE FROM user WHERE username =:username", {'username': user[0]})
+    db_execute(conn, "DELETE FROM number_index WHERE user_id =:user_id", {'user_id': user_id[0]})
 
 
 def is_user_existing(conn, user):
