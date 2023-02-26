@@ -43,10 +43,10 @@ def db_execute(conn, query, parameters, fetchall=False):
 
 
 def get_current_index(conn, user, num):
-    index = None
-    index = db_execute(conn, f"SELECT {num}_current_index FROM number_index "
-                             f"INNER JOIN user ON user.user_id = number_index.user_id WHERE username =:username",
-                       {'username': user})
+    index = db_execute(conn, f"SELECT current_index FROM number_index "
+                             f"INNER JOIN user ON user.user_id = number_index.user_id "
+                             f"WHERE username =:username AND number =:number",
+                       {'username': user, 'number': num})
     if index is None:
         return -1
     else:
@@ -55,15 +55,17 @@ def get_current_index(conn, user, num):
 
 def raise_current_index(conn, user, increment, num):
     updated_index = get_current_index(conn, user, num) + increment
-    db_execute(conn, f"UPDATE number_index SET {num}_current_index =:index WHERE user_id ="
-                     f"(SELECT user_id FROM user WHERE username =:username)",
-               {'index': updated_index, 'username': user})
+    db_execute(conn, f"UPDATE number_index SET current_index =:index "
+                     f"WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
+                     f"AND number =:number",
+               {'index': updated_index, 'username': user, 'number': num})
 
 
 def reset_current_index(conn, user, num):
-    db_execute(conn, f"UPDATE number_index SET {num}_current_index =:index WHERE user_id ="
-                     f"(SELECT user_id FROM user WHERE username =:username)",
-               {'index': 0, 'username': user})
+    db_execute(conn, f"UPDATE number_index SET current_index =:index "
+                     f"WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
+                     f"AND number =:number",
+               {'index': 0, 'username': user, 'number': num})
 
 
 def get_password(conn, user):
@@ -93,15 +95,20 @@ def get_all_user_names(conn):
 def create_user(conn, user, password):
     if is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
         return None
-    db_execute(conn, "INSERT INTO user (username, password) "
-                     "VALUES (:username, :password)",
+    db_execute(conn, "INSERT INTO user (username, password) VALUES (:username, :password)",
                {'username': user, 'password': generate_password_hash(password)})
     user_id = db_execute(conn, "SELECT user_id FROM user WHERE username =:username", {'username': user})
-    db_execute(conn, "INSERT INTO number_index (user_id) VALUES (:user_id)", {'user_id': user_id[0]})
+    db_execute(conn, "INSERT INTO number_index (user_id, number)"
+                     "VALUES (:user_id, :pi), (:user_id, :e), (:user_id, :sqrt2)",
+               {'user_id': user_id[0], 'pi': "pi", 'e': "e", 'sqrt2': "sqrt2"})
 
 
 def delete_user(conn, user):
+    user_id = db_execute(conn, "SELECT user_id FROM user WHERE username =:username", {'username': user})
+    if user_id is None:
+        return
     db_execute(conn, "DELETE FROM user WHERE username =:username", {'username': user})
+    db_execute(conn, "DELETE FROM number_index WHERE user_id =:user_id", {'user_id': user_id})
 
 
 def is_user_existing(conn, user):
@@ -148,9 +155,8 @@ def create_user_table(conn):
 
 def create_number_index_table(conn):
     db_execute(conn, """ CREATE TABLE IF NOT EXISTS number_index (
-                    pi_current_index integer DEFAULT 0,
-                    e_current_index integer DEFAULT 0,
-                    sqrt2_current_index integer DEFAULT 0,
+                    number text NOT NULL,
+                    current_index integer DEFAULT 0,
                     user_id integer NOT NULL,
                     FOREIGN KEY (user_id)
                         REFERENCES user (user_id)
