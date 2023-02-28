@@ -1,4 +1,5 @@
 import pytest
+from database import TEST_USER_STD
 
 PI_FIRST_10 = b"3.1415926535"
 PI_NEXT_10 = b"8979323846"
@@ -73,3 +74,13 @@ def test_db_number_digit(client, endpoint, first_ten):
 def test_if_no_cache_is_set_correctly(client):
     assert client.get("/e").headers['Cache-Control'] == "no-store, max-age=0"
     assert client.get("/admin/users").headers['Cache-Control'] == "no-store, max-age=0"
+
+
+def test_all_user_indices_get_reset(client):
+    client.get(f"/pi/{TEST_USER_STD[0]}")
+    client.get(f"/e/{TEST_USER_STD[0]}")
+    client.get(f"/sqrt2/{TEST_USER_STD[0]}")
+    client.delete(f"/reset/{TEST_USER_STD[0]}")
+    assert client.get(f"/pi/{TEST_USER_STD[0]}").data == PI_FIRST_10
+    assert client.get(f"/e/{TEST_USER_STD[0]}").data == E_FIRST_10
+    assert client.get(f"/sqrt2/{TEST_USER_STD[0]}").data == SQRT2_FIRST_10

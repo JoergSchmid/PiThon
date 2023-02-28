@@ -4,6 +4,7 @@ import pytest
 from werkzeug.security import check_password_hash
 
 from database import TEST_USER_STD, TEST_USER_ADMIN, get_password, create_connection
+from test_irrational_number_endpoints import PI_FIRST_10, E_FIRST_10, SQRT2_FIRST_10
 from web import CONFIG_DB_PATH
 
 status = http.HTTPStatus
@@ -55,3 +56,15 @@ def test_only_admin_can_delete_test_user(client_with_test_user):
     assert client.delete("/admin/users/test_user").status_code == status.UNAUTHORIZED
     assert client.delete("/admin/users/test_user", auth=TEST_USER_STD).status_code == status.FORBIDDEN
     assert client.delete("/admin/users/test_user", auth=TEST_USER_ADMIN).status_code == status.OK
+
+
+def test_admin_can_reset_all_user_indices(client_with_test_user):
+    client = client_with_test_user
+
+    client.get(f"/pi/{TEST_USER_STD[0]}")
+    client.get(f"/e/{TEST_USER_ADMIN[0]}")
+    client.get(f"/sqrt2/test_user")
+    assert client.delete("/admin/reset_all_indices", auth=TEST_USER_ADMIN).status_code == status.OK
+    assert client.get(f"/pi/{TEST_USER_STD[0]}").data == PI_FIRST_10
+    assert client.get(f"/e/{TEST_USER_ADMIN[0]}").data == E_FIRST_10
+    assert client.get("/sqrt2/test_user").data == SQRT2_FIRST_10

@@ -21,6 +21,7 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
+        db_execute(conn, "PRAGMA foreign_keys = ON;", {})
         return conn
     except Error as e:
         print(e)
@@ -43,9 +44,9 @@ def db_execute(conn, query, parameters, fetchall=False):
 
 
 def get_current_index(conn, user, num):
-    index = db_execute(conn, f"SELECT current_index FROM number_index "
-                             f"INNER JOIN user ON user.user_id = number_index.user_id "
-                             f"WHERE username =:username AND number =:number",
+    index = db_execute(conn, "SELECT current_index FROM number_indices "
+                             "INNER JOIN users ON users.user_id = number_indices.user_id "
+                             "WHERE username =:username AND number =:number",
                        {'username': user, 'number': num})
     if index is None:
         return -1
@@ -55,39 +56,49 @@ def get_current_index(conn, user, num):
 
 def raise_current_index(conn, user, increment, num):
     updated_index = get_current_index(conn, user, num) + increment
-    db_execute(conn, f"UPDATE number_index SET current_index =:index "
-                     f"WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
-                     f"AND number =:number",
+    db_execute(conn, "UPDATE number_indices SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)"
+                     "AND number =:number",
                {'index': updated_index, 'username': user, 'number': num})
 
 
 def reset_current_index(conn, user, num):
-    db_execute(conn, f"UPDATE number_index SET current_index =:index "
-                     f"WHERE user_id = (SELECT user_id FROM user WHERE username =:username)"
-                     f"AND number =:number",
+    db_execute(conn, "UPDATE number_indices SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)"
+                     "AND number =:number",
                {'index': 0, 'username': user, 'number': num})
 
 
+def reset_all_current_indices_of_user(conn, user):
+    db_execute(conn, "UPDATE number_indices SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)",
+               {'username': user, 'index': 0})
+
+
+def reset_all_current_indices(conn):
+    db_execute(conn, "UPDATE number_indices SET current_index =:index", {'index': 0})
+
+
 def get_password(conn, user):
-    pw = db_execute(conn, "SELECT password FROM user WHERE username =:username", {'username': user})
+    pw = db_execute(conn, "SELECT password FROM users WHERE username =:username", {'username': user})
     if pw is None:
         return None
     return pw[0]
 
 
 def change_password(conn, user, password):
-    db_execute(conn, "UPDATE user SET password =:password WHERE username =:username",
+    db_execute(conn, "UPDATE users SET password =:password WHERE username =:username",
                {'password': generate_password_hash(password), 'username': user})
 
 
 def get_user_data(conn, user):
-    data = db_execute(conn, "SELECT * FROM user INNER JOIN user USING (user_id) WHERE username =:username",
+    data = db_execute(conn, "SELECT * FROM users INNER JOIN users USING (user_id) WHERE username =:username",
                       {'username': user})
     return data
 
 
 def get_all_user_names(conn):
-    data = db_execute(conn, "SELECT username FROM user", {}, fetchall=True)
+    data = db_execute(conn, "SELECT username FROM users", {}, fetchall=True)
     usernames = [i[0] for i in data]  # Returns a normal tuple instead of the list of tuples in data
     return usernames
 
@@ -95,30 +106,29 @@ def get_all_user_names(conn):
 def create_user(conn, user, password):
     if is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
         return None
-    db_execute(conn, "INSERT INTO user (username, password) VALUES (:username, :password)",
+    db_execute(conn, "INSERT INTO users (username, password) VALUES (:username, :password)",
                {'username': user, 'password': generate_password_hash(password)})
-    user_id = db_execute(conn, "SELECT user_id FROM user WHERE username =:username", {'username': user})
-    db_execute(conn, "INSERT INTO number_index (user_id, number)"
+    user_id = db_execute(conn, "SELECT user_id FROM users WHERE username =:username", {'username': user})
+    db_execute(conn, "INSERT INTO number_indices (user_id, number)"
                      "VALUES (:user_id, :pi), (:user_id, :e), (:user_id, :sqrt2)",
                {'user_id': user_id[0], 'pi': "pi", 'e': "e", 'sqrt2': "sqrt2"})
 
 
 def delete_user(conn, user):
-    user_id = db_execute(conn, "SELECT user_id FROM user WHERE username =:username", {'username': user})
+    user_id = db_execute(conn, "SELECT user_id FROM users WHERE username =:username", {'username': user})
     if user_id is None:
         return
-    db_execute(conn, "DELETE FROM user WHERE username =:username", {'username': user[0]})
-    db_execute(conn, "DELETE FROM number_index WHERE user_id =:user_id", {'user_id': user_id[0]})
+    db_execute(conn, "DELETE FROM users WHERE username =:username", {'username': user[0]})
 
 
 def is_user_existing(conn, user):
-    data = db_execute(conn, "SELECT username FROM user WHERE username =:username", {'username': user})
+    data = db_execute(conn, "SELECT username FROM users WHERE username =:username", {'username': user})
     return data is not None
 
 
 def get_digit_from_digit_index(conn, number, digit_index):
     def get_data():
-        return db_execute(conn, "SELECT digit FROM number_digit WHERE number =:number AND digit_index =:digit_index",
+        return db_execute(conn, "SELECT digit FROM number_digits WHERE number =:number AND digit_index =:digit_index",
                           {'number': number.name, 'digit_index': digit_index})
 
     data = get_data()
@@ -129,48 +139,55 @@ def get_digit_from_digit_index(conn, number, digit_index):
 
 
 def create_digit_index_up_to(conn, number, digit_index):
-    old_entry_count = int(db_execute(conn, "SELECT COUNT(*) FROM number_digit WHERE number =:number",
-                                     {'number': number.name})[0])
-    for i in range(old_entry_count, int(digit_index) + 1):
-        db_execute(conn, "INSERT INTO number_digit (number, digit_index, digit)"
+    next_index = int(db_execute(conn, "SELECT COUNT(*) FROM number_digits WHERE number =:number",
+                                {'number': number.name})[0])
+    all_digits = number().get_digits_up_to(int(digit_index))
+    all_digits = all_digits.replace('.', '')
+    for i in range(next_index, int(digit_index) + 1):
+        db_execute(conn, "INSERT INTO number_digits (number, digit_index, digit)"
                          "VALUES (:number, :digit_index, :digit)",
-                   {'number': number.name, 'digit_index': i, 'digit': number().get_digit_at_index(i)})
+                   {'number': number.name, 'digit_index': i, 'digit': all_digits[i]})
 
 
 def create_db_tables(path):
     conn = create_connection(path)
-    create_user_table(conn)
-    create_number_index_table(conn)
-    create_number_digit_table(conn)
+    create_users_table(conn)
+    create_number_indices_table(conn)
+    create_number_digits_table(conn)
+    create_sql_indices(conn)
     create_test_users(conn)
 
 
-def create_user_table(conn):
-    db_execute(conn, """ CREATE TABLE IF NOT EXISTS user (
+def create_users_table(conn):
+    db_execute(conn, """ CREATE TABLE IF NOT EXISTS users (
                     user_id integer PRIMARY KEY AUTOINCREMENT,
                     username text NOT NULL,
                     password text NOT NULL
                     ); """, {})
 
 
-def create_number_index_table(conn):
-    db_execute(conn, """ CREATE TABLE IF NOT EXISTS number_index (
+def create_number_indices_table(conn):
+    db_execute(conn, """ CREATE TABLE IF NOT EXISTS number_indices (
                     number text NOT NULL,
                     current_index integer DEFAULT 0,
                     user_id integer NOT NULL,
                     FOREIGN KEY (user_id)
-                        REFERENCES user (user_id)
+                        REFERENCES users (user_id)
                         ON DELETE CASCADE
                         ON UPDATE CASCADE
                     ); """, {})
 
 
-def create_number_digit_table(conn):
-    db_execute(conn, """ CREATE TABLE IF NOT EXISTS number_digit (
+def create_number_digits_table(conn):
+    db_execute(conn, """ CREATE TABLE IF NOT EXISTS number_digits (
                     number text,
                     digit_index integer,
                     digit integer
                     ); """, {})
+
+
+def create_sql_indices(conn):
+    db_execute(conn, "CREATE INDEX number_digits_idx ON number_digits (number, digit_index)", {})
 
 
 def create_test_users(conn):
