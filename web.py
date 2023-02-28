@@ -12,6 +12,8 @@ CONFIG_PI_TXT_PATH = "PI_TXT_PATH"
 CONFIG_E_TXT_PATH = "E_TXT_PATH"
 CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 
+CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
+
 
 def create_standard_get_view(number_class, txt_path):
     number_instance = number_class()
@@ -141,9 +143,11 @@ def create_app(storage_folder="./db/"):
     def home():
         return f"Welcome home, {auth.current_user()}!"
 
-    @app.get('/digits/<file>')
-    def download_file(file):
-        path = f"./db/{file}.txt"
+    @app.get('/digits/<number_name>')
+    def download_file(number_name):
+        if number_name not in CONFIG_TXT_PATH_MAPPING.keys():
+            return "Unknown number", status.BAD_REQUEST
+        path = app.config[CONFIG_TXT_PATH_MAPPING[number_name]]
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
         return "File not found", status.NOT_FOUND
