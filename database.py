@@ -154,6 +154,7 @@ def create_db_tables(path):
     create_users_table(conn)
     create_number_indices_table(conn)
     create_number_digits_table(conn)
+    create_sql_indices(conn)
     create_test_users(conn)
 
 
@@ -183,6 +184,10 @@ def create_number_digits_table(conn):
                     digit_index integer,
                     digit integer
                     ); """, {})
+
+
+def create_sql_indices(conn):
+    db_execute(conn, "CREATE INDEX number_digits_idx ON number_digits (number, digit_index)", {})
 
 
 def create_test_users(conn):
