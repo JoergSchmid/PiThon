@@ -21,6 +21,7 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
+        db_execute(conn, "PRAGMA foreign_keys = ON;", {})
         return conn
     except Error as e:
         print(e)
@@ -117,8 +118,7 @@ def delete_user(conn, user):
     user_id = db_execute(conn, "SELECT user_id FROM user WHERE username =:username", {'username': user})
     if user_id is None:
         return
-    db_execute(conn, "DELETE FROM user WHERE username =:username", {'username': user[0]})
-    db_execute(conn, "DELETE FROM number_index WHERE user_id =:user_id", {'user_id': user_id[0]})
+    db_execute(conn, "DELETE FROM users WHERE username =:username", {'username': user[0]})
 
 
 def is_user_existing(conn, user):
