@@ -1,5 +1,5 @@
 import http
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, render_template
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
@@ -94,7 +94,7 @@ def create_app(storage_folder="./db/"):
     :param storage_folder: folder the database should use
     :return: app
     """
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="frontend", template_folder="frontend")
     app.config[CONFIG_DB_PATH] = Path(storage_folder) / "pithon.db"
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
     app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
@@ -127,6 +127,10 @@ def create_app(storage_folder="./db/"):
         app.add_url_rule(f"/db/{number.name}/<digit_index>",
                          view_func=create_get_database_view(number, app.config[CONFIG_DB_PATH]),
                          endpoint=f"{number.name}_get_database")
+
+    @app.route('/')
+    def homepage():
+        return render_template("homepage.html")
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
