@@ -130,7 +130,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/')
     def homepage():
-        return render_template("homepage.html")
+        return render_template("homepage.html"), status.OK
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
@@ -146,6 +146,10 @@ def create_app(storage_folder="./db/"):
     @auth.login_required
     def home():
         return f"Welcome home, {auth.current_user()}!"
+
+    @app.route('/digits')
+    def digits_view():
+        return render_template("digits.html"), status.OK
 
     @app.get('/digits/<number_name>')
     def download_file(number_name):
@@ -220,7 +224,7 @@ def create_app(storage_folder="./db/"):
     def admin_reset_all_indices():
         if not is_admin(auth.current_user()):
             return "Unauthorized. Admin access only.", status.FORBIDDEN
-        
+
         reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
         return "All indices are reset.", status.OK
 

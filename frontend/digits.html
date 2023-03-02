@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    function onSubmitButtonClick() {
+      var e = document.getElementById("number_selection")
+      window.open(window.location.origin + "/" + e.options[e.selectedIndex].value, '_blank').focus()
+    }
+  </script>
+
+  <meta charset="UTF-8">
+  <title>Digits</title>
+</head>
+<body>
+
+<h1>Digits</h1>
+
+<!--Dropdown menu-->
+<label for="number_selection">Select your number</label>
+<select name="number_selection" id="number_selection">
+  <option value="pi">Pi</option>
+  <option value="e">E</option>
+  <option value="sqrt2">Sqrt2</option>
+</select><br><br>
+
+<!--Radio button group-->
+<form>
+  <input type="radio" id="next_ten" name="choose_mode" value="next_ten">
+  <label for="next_ten">Next ten digits</label><br>
+  <input type="radio" id="one_digit" name="choose_mode" value="one_digit">
+  <label for="one_digit">One digit at</label><br>
+</form><br>
+
+<!--Number input-->
+<form>
+  <input type="number" id="index" name="index" value="0">
+</form><br><br>
+
+<!--Buttons-->
+<input type="button" id="submit" name="submit" value="Submit" onclick="onSubmitButtonClick()">
+<input type="button" id="reset" name="reset" value="Reset">
+
+</body>
+</html>
