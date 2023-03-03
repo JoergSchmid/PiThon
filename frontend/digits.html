@@ -2,9 +2,30 @@
 <html lang="en">
 <head>
   <script>
+    let numberName;
+
+    function declareNumberName() {
+      let numberDropSelect = document.getElementById("number_selection");
+      numberName = numberDropSelect.options[numberDropSelect.selectedIndex].value
+    }
+
     function onSubmitButtonClick() {
-      var e = document.getElementById("number_selection")
-      window.open(window.location.origin + "/" + e.options[e.selectedIndex].value, '_blank').focus()
+      declareNumberName()
+      let radioSelectNextTen = document.getElementById("next_ten").checked;
+      let radioSelectOneDigit = document.getElementById("one_digit").checked;
+      let index = document.getElementById("input_index").value;
+      if(index === undefined || index < 0)
+        index = 0;
+      if(radioSelectNextTen)
+        window.open(window.location.origin + "/" + numberName, '_blank').focus()
+      if(radioSelectOneDigit)
+        window.open(window.location.origin + "/" + numberName + "/" + index.toString(), '_blank').focus()
+
+    }
+
+    function onResetButtonClick() {
+      declareNumberName()
+      window.open(window.location.origin + "/" + numberName + "/reset", '_blank').focus()
     }
   </script>
 
@@ -25,20 +46,21 @@
 
 <!--Radio button group-->
 <form>
-  <input type="radio" id="next_ten" name="choose_mode" value="next_ten">
+  <input type="radio" id="next_ten" name="choose_mode" value="next_ten" checked="checked">
   <label for="next_ten">Next ten digits</label><br>
   <input type="radio" id="one_digit" name="choose_mode" value="one_digit">
   <label for="one_digit">One digit at</label><br>
-</form><br>
+</form>
 
 <!--Number input-->
 <form>
-  <input type="number" id="index" name="index" value="0">
+  <label for="input_index"></label>
+  <input type="number" id="input_index" name="index" value="0">
 </form><br><br>
 
 <!--Buttons-->
 <input type="button" id="submit" name="submit" value="Submit" onclick="onSubmitButtonClick()">
-<input type="button" id="reset" name="reset" value="Reset">
+<input type="button" id="reset" name="reset" value="Reset" onclick="onResetButtonClick()">
 
 </body>
 </html>
