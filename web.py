@@ -1,5 +1,5 @@
 import http
-from flask import Flask, request, send_file, render_template
+from flask import Flask, request, send_file, render_template, redirect
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
@@ -149,7 +149,21 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/digits')
     def digits_view():
-        return render_template("digits.html"), status.OK
+        return render_template("digits_form.html"), status.OK  # Can change to digits_js.html for javascript solution
+
+    @app.route('/digits/form')
+    def digits_form():  # HTML form @ '/digits'
+        number_selection = request.args.get("number_selection")
+        reset = request.args.get("reset")
+        choose_mode = request.args.get("choose_mode")
+        index = request.args.get("index")
+        if reset is not None and reset == "Reset":
+            return redirect(request.host_url + number_selection + "/reset", code=302)
+        if choose_mode == "next_ten":
+            return redirect(request.host_url + number_selection, code=302)
+        if choose_mode == "one_digit":
+            return redirect(request.host_url + number_selection + "/" + index, code=302)
+        return "Invalid request.", status.BAD_REQUEST
 
     @app.get('/digits/<number_name>')
     def download_file(number_name):
