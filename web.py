@@ -1,5 +1,5 @@
 import http
-from flask import Flask, request, send_file, render_template
+from flask import Flask, request, send_file, render_template, redirect
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
@@ -130,7 +130,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/')
     def homepage():
-        return render_template("homepage.html")
+        return render_template("homepage.html"), status.OK
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
@@ -146,6 +146,26 @@ def create_app(storage_folder="./db/"):
     @auth.login_required
     def home():
         return f"Welcome home, {auth.current_user()}!"
+
+    @app.route('/digits')
+    def digits_view():
+        return render_template("digits_form.html"), status.OK  # Can change to digits_js.html for javascript solution
+
+    @app.route('/digits/form')
+    def digits_form():  # HTML form @ '/digits'
+        number_selection = request.args.get("number_selection")
+        reset = request.args.get("reset")
+        choose_mode = request.args.get("choose_mode")
+        index = request.args.get("index")
+        if reset is not None and reset == "Reset":
+            return redirect(request.host_url + number_selection + "/reset", code=302)
+        if choose_mode == "next_ten":
+            return redirect(request.host_url + number_selection, code=302)
+        if index is None or not index.isnumeric() or int(index) < 0:
+            return "Invalid request.", status.BAD_REQUEST
+        if choose_mode == "one_digit":
+            return redirect(request.host_url + number_selection + "/" + index, code=302)
+        return "Invalid request.", status.BAD_REQUEST
 
     @app.get('/digits/<number_name>')
     def download_file(number_name):
@@ -220,7 +240,7 @@ def create_app(storage_folder="./db/"):
     def admin_reset_all_indices():
         if not is_admin(auth.current_user()):
             return "Unauthorized. Admin access only.", status.FORBIDDEN
-        
+
         reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
         return "All indices are reset.", status.OK
 
