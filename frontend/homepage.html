@@ -92,12 +92,14 @@
     row2.insertCell(0).innerHTML = "e";
     row3.insertCell(0).innerHTML = "Sqrt(2)";
 
-    // ToDo: We call the digits of the number separately,
-    // writing a new endpoint returning the first ten would be more efficient
+    const pi_ten = httpGet(window.location.origin + "/pi/get_first_ten");
+    const e_ten = httpGet(window.location.origin + "/e/get_first_ten");
+    const sqrt2_ten = httpGet(window.location.origin + "/sqrt2/get_first_ten");
+
     for (let i = 0; i < 10; i++) {
-        row1.insertCell(i+1).innerHTML = httpGet(window.location.origin + "/pi/" + i.toString());
-        row2.insertCell(i+1).innerHTML = httpGet(window.location.origin + "/e/" + i.toString());
-        row3.insertCell(i+1).innerHTML = httpGet(window.location.origin + "/sqrt2/" + i.toString());
+        row1.insertCell(i+1).innerHTML = pi_ten[i];
+        row2.insertCell(i+1).innerHTML = e_ten[i];
+        row3.insertCell(i+1).innerHTML = sqrt2_ten[i];
     }
 </script>
 
