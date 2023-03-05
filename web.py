@@ -161,7 +161,7 @@ def create_app(storage_folder="./db/"):
             return redirect(request.host_url + number_selection + "/reset", code=302)
         if choose_mode == "next_ten":
             return redirect(request.host_url + number_selection, code=302)
-        if index is None or not index.isnumeric() or index < 0:
+        if index is None or not index.isnumeric() or int(index) < 0:
             return "Invalid request.", status.BAD_REQUEST
         if choose_mode == "one_digit":
             return redirect(request.host_url + number_selection + "/" + index, code=302)
