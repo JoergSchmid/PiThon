@@ -4,6 +4,7 @@
     <style>
         h1 {
             text-align: center;
+            color: dodgerblue;
         }
         body {
             background-image: url("frontend/logo.png");
@@ -21,10 +22,16 @@
             left: 0;
             width: 100%;
         }
+        table, th, td {
+            border: 1px solid black
+        }
+        .download_title {
+            color: rgb(200, 64, 64);
+        }
         .flex-container {
             display: flex;
             flex-direction: column;
-            background-color: gray;
+            background-color: white;
         }
         .flex-container > div {
             background-color: lightgrey;
@@ -47,7 +54,52 @@
 <div class="flex-container">
     <div><a href="frontend/digits_form.html">Digits</a></div>
     <div><a href="frontend/digits_js.html">Old digits</a></div>
-</div>
+</div><br>
+
+<table>
+    <thead>
+    <tr>
+        <th></th>
+        <th>0</th>
+        <th>1</th>
+        <th>2</th>
+        <th>3</th>
+        <th>4</th>
+        <th>5</th>
+        <th>6</th>
+        <th>7</th>
+        <th>8</th>
+        <th>9</th>
+    </tr>
+    </thead>
+    <tbody id="table_body"></tbody>
+</table>
+<script>
+    const table = document.getElementById("table_body");
+
+    function httpGet(url) {
+        let r = new XMLHttpRequest();
+        r.open("GET", url, false);
+        r.send(null);
+        return r.responseText;
+    }
+
+    let row1 = table.insertRow();
+    let row2 = table.insertRow();
+    let row3 = table.insertRow();
+
+    row1.insertCell(0).innerHTML = "Pi";
+    row2.insertCell(0).innerHTML = "e";
+    row3.insertCell(0).innerHTML = "Sqrt(2)";
+
+    // ToDo: We call the digits of the number separately,
+    // writing a new endpoint returning the first ten would be more efficient
+    for (let i = 0; i < 10; i++) {
+        row1.insertCell(i+1).innerHTML = httpGet(window.location.origin + "/pi/" + i.toString());
+        row2.insertCell(i+1).innerHTML = httpGet(window.location.origin + "/e/" + i.toString());
+        row3.insertCell(i+1).innerHTML = httpGet(window.location.origin + "/sqrt2/" + i.toString());
+    }
+</script>
 
 <h3 class="download_title">Download number files:</h3>
 <ul>
