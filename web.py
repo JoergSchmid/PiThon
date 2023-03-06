@@ -156,6 +156,10 @@ def create_app(storage_folder="./db/"):
     def home():
         return f"Welcome home, {auth.current_user()}!"
 
+    @app.route('/tic-tac-toe')
+    def tic_tac_toe():
+        return render_template("tic_tac_toe.html")
+
     @app.route('/digits')
     def digits_view():
         return render_template("digits_form.html"), status.OK  # Can change to digits_js.html for javascript solution
