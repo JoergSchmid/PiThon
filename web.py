@@ -88,6 +88,13 @@ def create_get_view(number_class, txt_path, db_path):
     return get_view
 
 
+def create_get_first_ten_view(number_class):
+    def get_first_ten_view():
+        return number_class().get_first_ten_digits_without_point(), status.OK
+
+    return get_first_ten_view
+
+
 def create_app(storage_folder="./db/"):
     """
     Formatted according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
@@ -127,6 +134,8 @@ def create_app(storage_folder="./db/"):
         app.add_url_rule(f"/db/{number.name}/<digit_index>",
                          view_func=create_get_database_view(number, app.config[CONFIG_DB_PATH]),
                          endpoint=f"{number.name}_get_database")
+        app.add_url_rule(f"/{number.name}/get_first_ten", view_func=create_get_first_ten_view(number),
+                         endpoint=f"/{number.name}_get_first_ten")
 
     @app.route('/')
     def homepage():

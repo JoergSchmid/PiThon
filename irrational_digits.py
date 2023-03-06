@@ -22,6 +22,11 @@ class IrrationalDigits(ABC):
         i_num = self.get_number_with_accuracy(index)
         return i_num[-1]
 
+    def get_first_ten_digits_without_point(self):
+        i_num = self.get_number_with_accuracy(10)[-12:]
+        i_num = i_num.replace('.', '')
+        return i_num
+
     def get_next_ten_digits(self, txt_path):
         with open(txt_path, "a+") as f:
             f.seek(0)

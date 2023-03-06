@@ -3,15 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <title>Digits</title>
-  <link rel="icon" type="image" href="frontend/favicon.ico">
+  <link rel="icon" type="image" href="../frontend/favicon.ico">
+  <style>
+    h1 {
+      text-align: center;
+      color: dodgerblue;
+    }
+    body {
+      background-image: url("../frontend/logo.png");
+      background-repeat: no-repeat;
+      background-position: right top;
+      margin-right: 100px;
+      margin-top: 100px;
+      margin-bottom: 150px;
+      min-height: 400px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
 <h1>Digits</h1>
 
 <form action="/digits/form" target="_blank" method="get">
+
   <!--Dropdown menu-->
-  <label for="number_selection">Select your number</label>
+  <label for="number_selection"></label>
   <select name="number_selection" id="number_selection">
     <option value="pi">Pi</option>
     <option value="e">E</option>
