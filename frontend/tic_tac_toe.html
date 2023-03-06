@@ -6,22 +6,36 @@
 </head>
 <body>
 
-<canvas id="board" width="400" height="400" style="border: 1px solid black"></canvas>
+<canvas id="board" width="400" height="400" style="border: 4px solid black"></canvas>
+<br>
+<input type="button" id="reset" value="Reset" onclick="resetGame()">
+<p id="result"></p>
 
 <script>
     const canvas = document.getElementById("board");
+    const resultBox = document.getElementById("result");
     const sideLength = canvas.height;
     const thirdLength =  sideLength / 3;
     const ctx = canvas.getContext("2d");
     const margin = thirdLength / 10;
-    const board = [0,0,0,0,0,0,0,0,0] // Playing board, 0 = neutral, 1/2 = player 1/2
+    const colorGrid = "black";
+    const colorPlayer = ["red", "blue"];
+
+    let board
     const rect = canvas.getBoundingClientRect();
     let round = 0;
     let result = 0;
-    ctx.strokeStyle = "black";
-    drawGrid();
+    ctx.lineWidth = 4;
+    resetGame();
 
     function setSign(x, y) {
+        /*
+            board[] positions:
+            0 1 2
+            3 4 5
+            6 7 8
+            board[] value: 0 = neutral, 1/2 = player 1/2
+         */
         let pos = x+y*3;
         if(board[pos] !== 0)
             return;
@@ -33,10 +47,8 @@
             drawO(x*thirdLength, y*thirdLength);
         }
         result = checkBoard();
-        if(result === 1)
-            alert("X won");
-        else if(result === 2)
-            alert("O won");
+        if(result !== 0)
+            resultBox.innerHTML = "Player " + result.toString() + " won!";
         round++;
     }
 
@@ -50,46 +62,84 @@
     function checkBoard() {
         //rows
         for(let i = 0; i <=6; i+=3)
-            if (board[i] === board[i+1] && board[i] === board[i+2] && board[i] !== 0)
+            if (board[i] === board[i+1] && board[i] === board[i+2] && board[i] !== 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = colorPlayer[i-1]
+                ctx.moveTo(0, (i/3)*thirdLength + 0.5*thirdLength);
+                ctx.lineTo(sideLength, (i/3)*thirdLength + 0.5*thirdLength);
+                ctx.stroke();
                 return board[i];
+            }
 
         //columns
         for(let i = 0; i<3; i++)
-            if (board[i] === board[i + 3] && board[0] === board[i + 6] && board[i] !== 0)
+            if (board[i] === board[i + 3] && board[i] === board[i + 6] && board[i] !== 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = colorPlayer[i-1]
+                ctx.moveTo(i*thirdLength + 0.5*thirdLength, 0);
+                ctx.lineTo(i*thirdLength + 0.5*thirdLength, sideLength);
+                ctx.stroke();
                 return board[i];
+            }
 
         //diagonals
-        if(board[0] === board[4] && board[0] === board[8] && board[0] !== 0)
+        if(board[0] === board[4] && board[0] === board[8] && board[0] !== 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = colorPlayer[board[0]-1]
+            ctx.moveTo(0,0);
+            ctx.lineTo(sideLength, sideLength);
+            ctx.stroke();
             return board[0];
-        if(board[2] === board[4] && board[2] === board[6] && board[2] !== 0)
+        }
+        if(board[2] === board[4] && board[2] === board[6] && board[2] !== 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = colorPlayer[board[2]-1]
+            ctx.moveTo(0,sideLength);
+            ctx.lineTo(sideLength, 0);
+            ctx.stroke();
             return board[2];
+        }
 
         return 0;
     }
 
+    function resetGame() {
+        drawGrid();
+        board = [0,0,0,0,0,0,0,0,0];
+        round = 0;
+        result = 0;
+        resultBox.innerHTML = "";
+    }
+
     function drawGrid() {
-      ctx.moveTo(0, thirdLength);
-      ctx.lineTo(sideLength, thirdLength);
-      ctx.moveTo(0, 2 * thirdLength);
-      ctx.lineTo(sideLength, 2 * thirdLength);
-      ctx.moveTo(thirdLength, 0);
-      ctx.lineTo(thirdLength, sideLength);
-      ctx.moveTo(2 * thirdLength, 0);
-      ctx.lineTo(2 * thirdLength, sideLength);
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = colorGrid;
+        ctx.clearRect(0,0,sideLength,sideLength);
+        ctx.moveTo(0, thirdLength);
+        ctx.lineTo(sideLength, thirdLength);
+        ctx.moveTo(0, 2 * thirdLength);
+        ctx.lineTo(sideLength, 2 * thirdLength);
+        ctx.moveTo(thirdLength, 0);
+        ctx.lineTo(thirdLength, sideLength);
+        ctx.moveTo(2 * thirdLength, 0);
+        ctx.lineTo(2 * thirdLength, sideLength);
+        ctx.stroke();
     }
     function drawX(x, y) {
-      ctx.moveTo(x+margin, y+margin);
-      ctx.lineTo(x+thirdLength-margin, y+thirdLength-margin);
-      ctx.moveTo(x+margin, y+thirdLength-margin);
-      ctx.lineTo(x+thirdLength-margin, y+margin);
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = colorPlayer[0];
+        ctx.moveTo(x+margin, y+margin);
+        ctx.lineTo(x+thirdLength-margin, y+thirdLength-margin);
+        ctx.moveTo(x+margin, y+thirdLength-margin);
+        ctx.lineTo(x+thirdLength-margin, y+margin);
+        ctx.stroke();
     }
 
     function drawO(x, y) {
-      ctx.beginPath();
-      ctx.arc(x+(thirdLength/2), y+(thirdLength/2), thirdLength*0.4, 0, 2*Math.PI);
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = colorPlayer[1];
+        ctx.arc(x+(thirdLength/2), y+(thirdLength/2), thirdLength*0.4, 0, 2*Math.PI);
+        ctx.stroke();
     }
 
     function getMousePos(canvas, event) {
