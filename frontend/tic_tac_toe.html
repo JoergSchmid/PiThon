@@ -31,7 +31,7 @@
     ctx.lineWidth = 4;
     resetGame();
 
-    function setSign(x, y) {
+    function placeSign(x, y) {
         /*
             board[] positions:
             0 1 2
@@ -66,7 +66,7 @@
         for(let i = 0; i < 20; i++) {
             let rand = Math.trunc(9*Math.random());
             if (board[rand] === 0) {
-                setSign(rand % 3, Math.trunc(rand / 3));
+                placeSign(rand % 3, Math.trunc(rand / 3));
                 return;
             }
 
@@ -74,7 +74,7 @@
         //No random move found
         for(let i = 0; i < 9; i++) {
             if (board[i] === 0) {
-                setSign(i % 3, Math.trunc(i / 3));
+                placeSign(i % 3, Math.trunc(i / 3));
                 return;
             }
         }
@@ -189,7 +189,7 @@
         let mousePos = getMousePos(canvas, evt);
         if(isInside(mousePos, rect)) {
             let pos = getGridPos(mousePos.x, mousePos.y)
-            setSign(pos.a, pos.b);
+            placeSign(pos.a, pos.b);
         }
     })
 </script>
