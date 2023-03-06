@@ -10,7 +10,7 @@
 <canvas id="board" width="400" height="400" style="border: 4px solid black"></canvas>
 <br>
 <input type="button" id="reset" value="Reset" onclick="resetGame()">
-<p id="result"></p>
+<h3 id="result"></h3>
 
 <script>
     const canvas = document.getElementById("board");
@@ -48,9 +48,13 @@
             drawO(x*thirdLength, y*thirdLength);
         }
         result = checkBoard();
-        if(result !== 0)
+        if(result !== 0) {
+            resultBox.style.color = colorPlayer[result-1];
             resultBox.innerHTML = "Player " + result.toString() + " won!";
-        round++;
+        } else if(round === 8) {
+            resultBox.style.color = "black";
+            resultBox.innerHTML = "It´s a tie!"
+        } else round++;
     }
 
     function getGridPos(x, y) {
