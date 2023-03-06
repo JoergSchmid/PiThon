@@ -65,7 +65,7 @@
         for(let i = 0; i <=6; i+=3)
             if (board[i] === board[i+1] && board[i] === board[i+2] && board[i] !== 0) {
                 ctx.beginPath();
-                ctx.strokeStyle = colorPlayer[i-1]
+                ctx.strokeStyle = colorPlayer[board[i]-1]
                 ctx.moveTo(0, (i/3)*thirdLength + 0.5*thirdLength);
                 ctx.lineTo(sideLength, (i/3)*thirdLength + 0.5*thirdLength);
                 ctx.stroke();
@@ -76,7 +76,7 @@
         for(let i = 0; i<3; i++)
             if (board[i] === board[i + 3] && board[i] === board[i + 6] && board[i] !== 0) {
                 ctx.beginPath();
-                ctx.strokeStyle = colorPlayer[i-1]
+                ctx.strokeStyle = colorPlayer[board[i]-1]
                 ctx.moveTo(i*thirdLength + 0.5*thirdLength, 0);
                 ctx.lineTo(i*thirdLength + 0.5*thirdLength, sideLength);
                 ctx.stroke();
