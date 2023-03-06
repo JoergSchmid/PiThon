@@ -21,7 +21,7 @@
     const margin = thirdLength / 10;
     const colorGrid = "black";
     const colorPlayer = ["red", "blue"];
-
+    let ai_on = true;
     let board
     const rect = canvas.getBoundingClientRect();
     let round = 0;
@@ -53,8 +53,29 @@
             resultBox.innerHTML = "Player " + result.toString() + " won!";
         } else if(round === 8) {
             resultBox.style.color = "black";
-            resultBox.innerHTML = "It´s a tie!"
-        } else round++;
+            resultBox.innerHTML = "It´s a tie!";
+        } else
+            round++;
+        if(ai_on && round % 2 === 1)
+            ai_move();
+    }
+
+    function ai_move() {
+        for(let i = 0; i < 20; i++) {
+            let rand = Math.trunc(9*Math.random());
+            if (board[rand] === 0) {
+                setSign(rand % 3, Math.trunc(rand / 3));
+                return;
+            }
+
+        }
+        //No random move found
+        for(let i = 0; i < 9; i++) {
+            if (board[i] === 0) {
+                setSign(i % 3, Math.trunc(i / 3));
+                return;
+            }
+        }
     }
 
     function getGridPos(x, y) {
