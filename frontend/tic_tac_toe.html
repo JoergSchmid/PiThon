@@ -1,31 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <style>
+        .ctr {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            text-align: center;
+        }
+    </style>
     <meta charset="UTF-8">
     <title>Tic Tac Toe</title>
     <link rel="icon" type="image" href="../frontend/favicon.ico">
 </head>
 <body>
 
-<canvas id="board" width="400" height="400" style="border: 4px solid black"></canvas>
+<canvas id="board" class="ctr" width="400" height="400" style="border: 4px solid black"></canvas>
 <br>
-<h3 id="result"></h3><br>
-<input type="checkbox" id="ai_on" onclick="changeAI()">
-<label for="ai_on">AI On/Off</label><br>
-<input type="button" id="reset" value="Reset" onclick="resetGame()">
+<h3 id="result" class="ctr"></h3><br>
+
+<div class="ctr">
+    <input type="checkbox" id="ai_on" onclick="changeAI()">
+    <label for="ai_on">AI On/Off</label><br>
+</div>
+<input type="button" id="reset" class="ctr" value="Reset" onclick="resetGame()">
 
 <script>
     const canvas = document.getElementById("board");
     const resultBox = document.getElementById("result");
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext("2d");
     const sideLength = canvas.height;
     const thirdLength =  sideLength / 3;
-    const ctx = canvas.getContext("2d");
     const margin = thirdLength / 10;
     const colorGrid = "black";
     const colorPlayer = ["red", "blue"];
     let ai_on = false;
-    let board
-    const rect = canvas.getBoundingClientRect();
+    let board;
     let round = 0;
     let result = 0;
     ctx.lineWidth = 4;
@@ -178,19 +189,19 @@
         ctx.stroke();
     }
 
-    function getMousePos(canvas, event) {
+    function getMousePos(event) {
         return {
-            x:event.clientX - rect.left,
+            x: event.clientX - rect.left,
             y: event.clientY - rect.top
         };
     }
 
     function isInside(pos, rect){
-        return pos.x > rect.x && pos.x < rect.x+rect.width && pos.y < rect.y+rect.height && pos.y > rect.y
+        return pos.x > 0 && pos.x < rect.width && pos.y < rect.y+rect.height && pos.y > rect.y
     }
 
     canvas.addEventListener('click', function(evt) {
-        let mousePos = getMousePos(canvas, evt);
+        let mousePos = getMousePos(evt);
         if(isInside(mousePos, rect)) {
             let pos = getGridPos(mousePos.x, mousePos.y)
             placeSign(pos.a, pos.b);
