@@ -35,6 +35,7 @@
     const margin = thirdLength / 10;
     const colorGrid = "black";
     const colorPlayer = ["red", "blue"];
+    const ai_drawDelay = 500;
     let ai_on = false;
     let board;
     let round = 0;
@@ -57,12 +58,12 @@
             return;
         let player = round % 2 === 0 ? 1:2
         board[pos] = player;
+        result = checkBoard();
         if(player === 1) {
             drawX(x*thirdLength, y*thirdLength);
         } else if(player === 2) {
             drawO(x*thirdLength, y*thirdLength);
         }
-        result = checkBoard();
         if(result !== 0) {
             resultBox.style.color = colorPlayer[result-1];
             resultBox.innerHTML = "Player " + result.toString() + " won!";
@@ -71,10 +72,12 @@
             resultBox.style.color = "black";
             resultBox.innerHTML = "It´s a tie!";
             return;
-        } else
+        } else {
             round++;
-        if(ai_on && round % 2 === 1)
+        }
+        if(ai_on && round % 2 === 1) {
             ai_move();
+        }
     }
 
     function ai_move() {
@@ -174,7 +177,9 @@
         ctx.stroke();
     }
 
-    function drawO(x, y) {
+    async function drawO(x, y) {
+        if (ai_on && result === 0)
+            await sleep();
         ctx.beginPath();
         ctx.strokeStyle = colorPlayer[1];
         ctx.arc(x+(thirdLength/2), y+(thirdLength/2), thirdLength*0.4, 0, 2*Math.PI);
@@ -199,6 +204,10 @@
             placeSign(pos.a, pos.b);
         }
     })
+
+    function sleep() {
+        return new Promise(resolve => setTimeout(resolve, ai_drawDelay));
+    }
 </script>
 
 </body>
