@@ -39,6 +39,8 @@
             6 7 8
             board[] value: 0 = neutral, 1/2 = player 1/2
          */
+        if (result !== 0)
+            return;
         let pos = x+y*3;
         if(board[pos] !== 0)
             return;
@@ -53,9 +55,11 @@
         if(result !== 0) {
             resultBox.style.color = colorPlayer[result-1];
             resultBox.innerHTML = "Player " + result.toString() + " won!";
+            return;
         } else if(round === 8) {
             resultBox.style.color = "black";
             resultBox.innerHTML = "It´s a tie!";
+            return;
         } else
             round++;
         if(ai_on && round % 2 === 1)
