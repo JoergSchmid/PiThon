@@ -78,18 +78,10 @@
     }
 
     function ai_move() {
-        for(let i = 0; i < 20; i++) {
-            let rand = Math.trunc(9*Math.random());
+        let rand = Math.trunc(9*Math.random());
+        for(let i = 0; i < 9; i++, rand = (rand+1) % 9) {
             if (board[rand] === 0) {
                 placeSign(rand % 3, Math.trunc(rand / 3));
-                return;
-            }
-
-        }
-        //No random move found
-        for(let i = 0; i < 9; i++) {
-            if (board[i] === 0) {
-                placeSign(i % 3, Math.trunc(i / 3));
                 return;
             }
         }
