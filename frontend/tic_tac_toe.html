@@ -96,6 +96,8 @@
 
     function changeAI() {
         ai_on = !ai_on;
+        if(ai_on && round % 2 === 1)
+            ai_move();
     }
 
     function changeSign() {
