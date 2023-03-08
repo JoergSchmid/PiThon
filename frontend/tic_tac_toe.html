@@ -22,10 +22,30 @@
 <div class="ctr">
     <input type="checkbox" id="ai_on" onclick="changeAI()">
     <label for="ai_on">AI On/Off</label><br>
-</div>
-<div class="ctr">
     <input type="button" id="changeSign" value="Player 1 is X" onclick="changeSign()">
-    <input type="button" id="reset" value="Reset" onclick="resetGame()">
+    <input type="button" id="reset" value="Reset" onclick="resetGame()"><br><br>
+    <label for="colorP1">Player 1</label>
+    <select name="colorP1" id="colorP1" onchange="colorP1.style.color = colorP1.value;">
+        <option value="black" style="color: black">black</option>
+        <option value="red" style="color: red"selected="selected">red</option>
+        <option value="orange" style="color: orange">orange</option>
+        <option value="yellow" style="color: yellow">yellow</option>
+        <option value="green" style="color: green">green</option>
+        <option value="blue" style="color: blue">blue</option>
+        <option value="purple" style="color: purple">purple</option>
+        <option value="pink" style="color: pink">pink</option>
+    </select><br>
+    <label for="colorP2">Player 2</label>
+    <select name="colorP2" id="colorP2" onchange="colorP2.style.color = colorP2.value;">
+        <option value="black" style="color: black">black</option>
+        <option value="red" style="color: red">red</option>
+        <option value="orange" style="color: orange">orange</option>
+        <option value="yellow" style="color: yellow">yellow</option>
+        <option value="green" style="color: green">green</option>
+        <option value="blue" style="color: blue" selected="selected">blue</option>
+        <option value="purple" style="color: purple">purple</option>
+        <option value="pink" style="color: pink">pink</option>
+    </select><br><br>
 </div>
 
 <script>
@@ -33,11 +53,15 @@
     const resultBox = document.getElementById("result");
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext("2d");
+    const colorP1 = document.getElementById("colorP1");
+    const colorP2 = document.getElementById("colorP2");
+    colorP1.style.color = colorP1.value;
+    colorP2.style.color = colorP2.value;
     const sideLength = canvas.height;
     const thirdLength =  sideLength / 3;
     const margin = thirdLength / 10;
     const colorGrid = "black";
-    let colorPlayer = ["red", "blue"];
+    let colorPlayer = [colorP1.value, colorP2.value];
     const ai_drawDelay = 500;
     let playerOneIsX = true
     let ai_on = false;
@@ -168,6 +192,8 @@
         round = 0;
         winner = 0;
         resultBox.innerHTML = "";
+        colorPlayer = [document.getElementById("colorP1").value, document.getElementById("colorP2").value];
+        playerOneIsX = document.getElementById("changeSign").value;
     }
 
     function drawGrid() {
