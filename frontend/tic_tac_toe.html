@@ -23,7 +23,10 @@
     <input type="checkbox" id="ai_on" onclick="changeAI()">
     <label for="ai_on">AI On/Off</label><br>
 </div>
-<input type="button" id="reset" class="ctr" value="Reset" onclick="resetGame()">
+<div class="ctr">
+    <input type="button" id="changeSign" value="Player 1 is X" onclick="changeSign()">
+    <input type="button" id="reset" value="Reset" onclick="resetGame()">
+</div>
 
 <script>
     const canvas = document.getElementById("board");
@@ -34,8 +37,9 @@
     const thirdLength =  sideLength / 3;
     const margin = thirdLength / 10;
     const colorGrid = "black";
-    const colorPlayer = ["red", "blue"];
+    let colorPlayer = ["red", "blue"];
     const ai_drawDelay = 500;
+    let playerOneIsX = true
     let ai_on = false;
     let board;
     let round = 0;
@@ -51,22 +55,22 @@
             6 7 8
             board[] value: 0 = neutral, 1/2 = player 1/2
          */
-        if (result !== 0)
+        if (winner !== 0)
             return;
         let pos = x+y*3;
         if(board[pos] !== 0)
             return;
         let player = round % 2 === 0 ? 1:2
         board[pos] = player;
-        result = checkBoard();
-        if(player === 1) {
+        winner = checkBoard();
+        if ((player === 1 && playerOneIsX) || (player === 2 && !playerOneIsX)) {
             drawX(x*thirdLength, y*thirdLength);
-        } else if(player === 2) {
+        } else {
             drawO(x*thirdLength, y*thirdLength);
         }
-        if(result !== 0) {
-            resultBox.style.color = colorPlayer[result-1];
-            resultBox.innerHTML = "Player " + result.toString() + " won!";
+        if(winner !== 0) {
+            resultBox.style.color = colorPlayer[winner-1];
+            resultBox.innerHTML = "Player " + winner.toString() + " won!";
             return;
         } else if(round === 8) {
             resultBox.style.color = "black";
@@ -94,6 +98,16 @@
         ai_on = !ai_on;
     }
 
+    function changeSign() {
+        if (round !== 0 && winner === 0) {
+            resultBox.style.color = "black";
+            resultBox.innerHTML = "Finish this round first.";
+            return;
+        }
+        playerOneIsX = !playerOneIsX;
+        document.getElementById("changeSign").value = playerOneIsX ? "Player 1 is X" : "Player 1 is O";
+    }
+
     function getGridPos(x, y) {
         return {
             a: Math.trunc(x/thirdLength),
@@ -106,7 +120,8 @@
         for(let i = 0; i <=6; i+=3)
             if (board[i] === board[i+1] && board[i] === board[i+2] && board[i] !== 0) {
                 ctx.beginPath();
-                ctx.strokeStyle = colorPlayer[board[i]-1]
+                ctx.strokeStyle = colorPlayer[board[i]-1];
+                alert(colorPlayer);
                 ctx.moveTo(0, (i/3)*thirdLength + 0.5*thirdLength);
                 ctx.lineTo(sideLength, (i/3)*thirdLength + 0.5*thirdLength);
                 ctx.stroke();
@@ -117,7 +132,7 @@
         for(let i = 0; i<3; i++)
             if (board[i] === board[i + 3] && board[i] === board[i + 6] && board[i] !== 0) {
                 ctx.beginPath();
-                ctx.strokeStyle = colorPlayer[board[i]-1]
+                ctx.strokeStyle = colorPlayer[board[i]-1];
                 ctx.moveTo(i*thirdLength + 0.5*thirdLength, 0);
                 ctx.lineTo(i*thirdLength + 0.5*thirdLength, sideLength);
                 ctx.stroke();
@@ -127,7 +142,7 @@
         //diagonals
         if(board[0] === board[4] && board[0] === board[8] && board[0] !== 0) {
             ctx.beginPath();
-            ctx.strokeStyle = colorPlayer[board[0]-1]
+            ctx.strokeStyle = colorPlayer[board[0]-1];
             ctx.moveTo(0,0);
             ctx.lineTo(sideLength, sideLength);
             ctx.stroke();
@@ -135,7 +150,7 @@
         }
         if(board[2] === board[4] && board[2] === board[6] && board[2] !== 0) {
             ctx.beginPath();
-            ctx.strokeStyle = colorPlayer[board[2]-1]
+            ctx.strokeStyle = colorPlayer[board[2]-1];
             ctx.moveTo(0,sideLength);
             ctx.lineTo(sideLength, 0);
             ctx.stroke();
@@ -149,7 +164,7 @@
         drawGrid();
         board = [0,0,0,0,0,0,0,0,0];
         round = 0;
-        result = 0;
+        winner = 0;
         resultBox.innerHTML = "";
     }
 
@@ -167,9 +182,12 @@
         ctx.lineTo(2 * thirdLength, sideLength);
         ctx.stroke();
     }
-    function drawX(x, y) {
+
+    async function drawX(x, y) {
+        if (ai_on && winner === 0 && !playerOneIsX)
+            await sleep();
         ctx.beginPath();
-        ctx.strokeStyle = colorPlayer[0];
+        ctx.strokeStyle = colorPlayer[playerOneIsX ? 0 : 1];
         ctx.moveTo(x+margin, y+margin);
         ctx.lineTo(x+thirdLength-margin, y+thirdLength-margin);
         ctx.moveTo(x+margin, y+thirdLength-margin);
@@ -178,10 +196,10 @@
     }
 
     async function drawO(x, y) {
-        if (ai_on && result === 0)
+        if (ai_on && winner === 0 && playerOneIsX)
             await sleep();
         ctx.beginPath();
-        ctx.strokeStyle = colorPlayer[1];
+        ctx.strokeStyle = colorPlayer[playerOneIsX ? 1 : 0];
         ctx.arc(x+(thirdLength/2), y+(thirdLength/2), thirdLength*0.4, 0, 2*Math.PI);
         ctx.stroke();
     }
