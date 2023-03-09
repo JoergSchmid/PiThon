@@ -171,7 +171,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/digits')
     def digits_view():
-        return render_template("digits_form.html"), status.OK  # Can change to digits_js.html for javascript solution
+        return render_template("digits_form.html"), status.OK
 
     @app.route('/digits/form')
     def digits_form():  # HTML form @ '/digits'
