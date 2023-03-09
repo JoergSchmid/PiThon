@@ -20,11 +20,16 @@
 <h3 id="result" class="ctr"></h3><br>
 
 <div class="ctr">
-    <input type="checkbox" id="ai_on" onclick="changeAI()">
-    <label for="ai_on">AI On/Off</label><br>
-    <input type="button" id="changeSign" value="Player 1 is X" onclick="changeSign()">
+    <input type="button" id="changeSign" value="X first" onclick="changeSign()">
     <input type="button" id="reset" value="Reset" onclick="resetGame()"><br><br>
-    <label for="colorP1">Player 1</label>
+
+    <label for="ai_on">AI</label>
+    <select name="ai_on" id="ai_on" onchange="changeAIon()">
+        <option value="off" selected>off</option>
+        <option value="X">is X</option>
+        <option value="O">is O</option>
+    </select><br>
+    <label for="colorP1">Player X</label>
     <select name="colorP1" id="colorP1" onchange="colorP1.style.color = colorP1.value;">
         <option value="black" style="color: black">black</option>
         <option value="red" style="color: red" selected>red</option>
@@ -64,7 +69,8 @@
     let colorPlayer = [colorP1.value, colorP2.value];
     const ai_drawDelay = 500;
     let playerOneIsX = true
-    let ai_on = false;
+    let ai_on = document.getElementById("ai_on").value;
+    let is_ai_move = false;
     let board;
     let round = 0;
     let winner = 0;
@@ -103,8 +109,10 @@
         } else {
             round++;
         }
-        if(ai_on && round % 2 === 1) {
+        if(ai_on !== "off" && round % 2 === (ai_on === "X" ? 0 : 1)) {
+            is_ai_move = true;
             ai_move();
+            is_ai_move = false;
         }
     }
 
@@ -118,9 +126,9 @@
         }
     }
 
-    function changeAI() {
-        ai_on = !ai_on;
-        if(ai_on && round % 2 === 1)
+    function changeAIon() {
+        ai_on = document.getElementById("ai_on").value;
+        if(ai_on !== "off" && round % 2 === (ai_on === "X" ? 0 : 1))
             ai_move();
     }
 
@@ -192,7 +200,8 @@
         winner = 0;
         resultBox.innerHTML = "";
         colorPlayer = [document.getElementById("colorP1").value, document.getElementById("colorP2").value];
-        playerOneIsX = document.getElementById("changeSign").value;
+        playerOneIsX = document.getElementById("changeSign").value === "X first";
+        ai_on = document.getElementById("ai_on").value
     }
 
     function drawGrid() {
@@ -211,7 +220,7 @@
     }
 
     async function drawX(x, y) {
-        if (ai_on && winner === 0 && !playerOneIsX)
+        if (is_ai_move)
             await sleep();
         ctx.beginPath();
         ctx.strokeStyle = colorPlayer[playerOneIsX ? 0 : 1];
@@ -223,7 +232,7 @@
     }
 
     async function drawO(x, y) {
-        if (ai_on && winner === 0 && playerOneIsX)
+        if (is_ai_move)
             await sleep();
         ctx.beginPath();
         ctx.strokeStyle = colorPlayer[playerOneIsX ? 1 : 0];
