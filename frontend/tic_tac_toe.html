@@ -24,7 +24,7 @@
     <input type="button" id="reset" value="Reset" onclick="resetGame()"><br><br>
 
     <label for="ai_on">AI</label>
-    <select name="ai_on" id="ai_on" onchange="changeAIon()">
+    <select name="ai_on" id="ai_on" onchange="checkAIon()">
         <option value="off" selected>off</option>
         <option value="X">is X</option>
         <option value="O">is O</option>
@@ -109,7 +109,7 @@
         } else {
             round++;
         }
-        if(ai_on !== "off" && round % 2 === (ai_on === "X" ? 0 : 1)) {
+        if(isAiTurn()) {
             is_ai_move = true;
             ai_move();
             is_ai_move = false;
@@ -126,9 +126,13 @@
         }
     }
 
-    function changeAIon() {
+    function isAiTurn() {
+        return ai_on !== "off" && round % 2 === (playerOneIsX ? (ai_on === "X" ? 0 : 1) : (ai_on === "X" ? 1 : 0));
+    }
+
+    function checkAIon() {
         ai_on = document.getElementById("ai_on").value;
-        if(ai_on !== "off" && round % 2 === (ai_on === "X" ? 0 : 1))
+        if (isAiTurn())
             ai_move();
     }
 
@@ -140,6 +144,7 @@
         }
         playerOneIsX = !playerOneIsX;
         document.getElementById("changeSign").value = playerOneIsX ? "X first" : "O first";
+        checkAIon();
     }
 
     function getGridPos(x, y) {
@@ -201,7 +206,7 @@
         resultBox.innerHTML = "";
         colorPlayer = [document.getElementById("colorP1").value, document.getElementById("colorP2").value];
         playerOneIsX = document.getElementById("changeSign").value === "X first";
-        ai_on = document.getElementById("ai_on").value
+        checkAIon();
     }
 
     function drawGrid() {
