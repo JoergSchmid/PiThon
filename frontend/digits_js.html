@@ -17,6 +17,7 @@
 </select><br><br>
 
 <input type="button" id="submit" name="submit" value="Submit" onclick="onSubmitButtonClick()">
+<input type="button" id="reset" name="reset" value="Reset" onclick="onResetButtonClick()">
 
 <label for="output"></label><br><br>
 <output id="output" name="output" style="font-size: larger"></output>
@@ -27,6 +28,10 @@
 
   function onSubmitButtonClick() {
     output.innerHTML = httpGet(window.location.origin + "/" + numberName.value);
+  }
+
+  function onResetButtonClick() {
+    httpGet(window.location.origin + "/" + numberName.value + "/reset");
   }
 
   function httpGet(url) {
