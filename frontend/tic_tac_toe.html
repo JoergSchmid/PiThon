@@ -27,7 +27,7 @@
     <label for="colorP1">Player 1</label>
     <select name="colorP1" id="colorP1" onchange="colorP1.style.color = colorP1.value;">
         <option value="black" style="color: black">black</option>
-        <option value="red" style="color: red"selected="selected">red</option>
+        <option value="red" style="color: red" selected>red</option>
         <option value="orange" style="color: orange">orange</option>
         <option value="yellow" style="color: yellow">yellow</option>
         <option value="green" style="color: green">green</option>
@@ -35,14 +35,14 @@
         <option value="purple" style="color: purple">purple</option>
         <option value="pink" style="color: pink">pink</option>
     </select><br>
-    <label for="colorP2">Player 2</label>
+    <label for="colorP2">Player O</label>
     <select name="colorP2" id="colorP2" onchange="colorP2.style.color = colorP2.value;">
         <option value="black" style="color: black">black</option>
         <option value="red" style="color: red">red</option>
         <option value="orange" style="color: orange">orange</option>
         <option value="yellow" style="color: yellow">yellow</option>
         <option value="green" style="color: green">green</option>
-        <option value="blue" style="color: blue" selected="selected">blue</option>
+        <option value="blue" style="color: blue" selected>blue</option>
         <option value="purple" style="color: purple">purple</option>
         <option value="pink" style="color: pink">pink</option>
     </select><br><br>
@@ -131,7 +131,7 @@
             return;
         }
         playerOneIsX = !playerOneIsX;
-        document.getElementById("changeSign").value = playerOneIsX ? "Player 1 is X" : "Player 1 is O";
+        document.getElementById("changeSign").value = playerOneIsX ? "X first" : "O first";
     }
 
     function getGridPos(x, y) {
