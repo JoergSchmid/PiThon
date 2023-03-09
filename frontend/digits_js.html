@@ -18,6 +18,8 @@
 
 <input type="button" id="submit" name="submit" value="Submit" onclick="onSubmitButtonClick()">
 <input type="button" id="reset" name="reset" value="Reset" onclick="onResetButtonClick()">
+<input type="checkbox" name="append" id="append" value="append">
+<label for="append">Append</label>
 
 <label for="output"></label><br><br>
 <output id="output" name="output" style="font-size: larger"></output>
@@ -25,9 +27,13 @@
 <script>
   const output = document.getElementById("output");
   const numberName = document.getElementById("number_selection");
+  const append = document.getElementById("append");
 
   function onSubmitButtonClick() {
-    output.innerHTML = httpGet(window.location.origin + "/" + numberName.value);
+    if (append.checked)
+      output.innerHTML += httpGet(window.location.origin + "/" + numberName.value);
+    else
+      output.innerHTML = httpGet(window.location.origin + "/" + numberName.value);
   }
 
   function onResetButtonClick() {
