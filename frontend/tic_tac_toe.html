@@ -147,7 +147,6 @@
             if (board[i] === board[i+1] && board[i] === board[i+2] && board[i] !== 0) {
                 ctx.beginPath();
                 ctx.strokeStyle = colorPlayer[board[i]-1];
-                alert(colorPlayer);
                 ctx.moveTo(0, (i/3)*thirdLength + 0.5*thirdLength);
                 ctx.lineTo(sideLength, (i/3)*thirdLength + 0.5*thirdLength);
                 ctx.stroke();
