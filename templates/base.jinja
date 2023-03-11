@@ -9,10 +9,21 @@
 </head>
 <body>
 
+<input type="button" id="toggleDM" value="Toggle darkmode" onclick="toggleDarkMode()">
+<script>
+    btn_dm = document.getElementById("toggleDM");
+    navbar = document.getElementById("flexboxContainer");
+
+    function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+        //navbar.style.backgroundColor = "darkgrey";
+    }
+</script>
+
 <h1>PiThon</h1>
 <p style="text-align: center">A simple web application for displaying digits of irrational numbers</p>
 
-<div class="flex-container">
+<div class="flex-container" id="flexContainer">
     <div><a href="/">Homepage</a></div>
     <div><a href="digits_form">Digits Form</a></div>
     <div><a href="digits_ajax">Digits AJAX</a></div>

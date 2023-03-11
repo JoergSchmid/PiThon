@@ -35,12 +35,16 @@ table, th, td {
     display: block;
     text-align: center;
 }
+.dark-mode {
+    background-color: rgb(32, 32, 32);
+    color: white;
+}
 .download_title {
     color: rgb(200, 64, 64);
 }
 .flex-container {
     display: flex;
-    background-color: white;
+    background-color: rgba(0, 0, 0, 0);
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
