@@ -25,18 +25,24 @@ footer {
     width: 100%;
 }
 table, th, td {
-    border: 1px solid black
+    border: 1px solid black;
+    width: fit-content;
+}
+.ctr {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    text-align: center;
 }
 .download_title {
     color: rgb(200, 64, 64);
 }
 .flex-container {
     display: flex;
-    flex-direction: column;
     background-color: white;
     width: fit-content;
-    float: left;
-    margin-right: 50px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .flex-container > div {
     background-color: lightgrey;
