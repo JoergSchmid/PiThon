@@ -148,7 +148,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/')
     def homepage():
-        return render_template("homepage.html"), status.OK
+        return render_template("homepage.jinja"), status.OK
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
@@ -167,15 +167,15 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/tic_tac_toe')
     def tic_tac_toe():
-        return render_template("tic_tac_toe.html")
+        return render_template("tic_tac_toe.jinja")
 
     @app.route('/digits_form')
     def digits_view():
-        return render_template("digits_form.html"), status.OK
+        return render_template("digits_form.jinja"), status.OK
 
     @app.route('/digits_ajax')
     def digits_ajax_view():
-        return render_template("digits_ajax.html"), status.OK
+        return render_template("digits_ajax.jinja"), status.OK
 
     @app.route('/digits/form')
     def digits_form():  # HTML form @ '/digits'

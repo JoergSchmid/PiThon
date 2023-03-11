@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="stylesheet" href="../static/css/main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <meta charset="UTF-8">
-    <title>PiThon Homepage</title>
-    <link rel="icon" type="image" href="../static/images/favicon.ico">
-</head>
-<body>
-<h1>PiThon</h1>
-<p style="text-align: center">A simple web application for displaying digits of irrational numbers</p>
+{% extends 'base.jinja' %}
 
-<div class="flex-container">
-    <div><a href="digits_form">Digits Form</a></div>
-    <div><a href="digits_ajax">Digits JS</a></div>
-    <div><a href="tic_tac_toe">Tic Tac Toe</a></div>
-</div><br><br><br>
+{% block title %}Homepage{% endblock %}
 
+{% block content %}
 <table>
     <thead>
     <tr>
@@ -71,12 +57,4 @@
     <li><a href="/digits/e">E</a></li>
     <li><a href="/digits/sqrt2">Sqrt2</a></li>
 </ul>
-
-<footer>
-    <p>Authors: Joerg Schmid, Felix Scholl</p>
-    <h6><a href="https://github.com/FelixFifi/PiThon">
-        <i class="fa fa-external-link"></i>Check out the source code here</a></h6>
-</footer>
-
-</body>
-</html>
+{% endblock %}

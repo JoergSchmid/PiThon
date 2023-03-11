@@ -1,30 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Digits</title>
-  <link rel="stylesheet" href="../static/css/main.css">
-  <link rel="icon" type="image" href="../static/images/favicon.ico">
-  <style>
-    h1 {
-      text-align: center;
-      color: dodgerblue;
-    }
-    body {
-      background-image: url("../static/logo.png");
-      background-repeat: no-repeat;
-      background-position: right top;
-      margin-right: 100px;
-      margin-top: 100px;
-      margin-bottom: 150px;
-      min-height: 400px;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
+{% extends 'base.jinja' %}
 
-<h1>Digits</h1>
+{% block title %}Digits{% endblock %}
+
+{% block content %}
+
+<h2>Digits</h2>
 
 <form action="/digits/form" target="_blank" method="get">
 
@@ -53,7 +33,5 @@
 
   <!--Submit button-->
   <input type="submit" id="submit" value="Submit">
-</form>
 
-</body>
-</html>
+{% endblock %}

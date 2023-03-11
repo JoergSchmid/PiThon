@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>AJAX digits</title>
-  <link rel="stylesheet" href="../static/css/main.css">
-  <link rel="icon" type="image" href="../static/images/favicon.ico">
-</head>
-<body>
+{% extends 'base.jinja' %}
 
-<h1>AJAX digits</h1>
+{% block title %}AJAX digits{% endblock %}
+
+{% block content %}
+
+<h2>AJAX digits</h2>
 
 <label for="number_selection">Select your number: </label>
 <select name="number_selection" id="number_selection">
@@ -56,5 +52,4 @@
   }
 </script>
 
-</body>
-</html>
+{% endblock %}

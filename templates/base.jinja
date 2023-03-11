@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} {% endblock %} - PiThon</title>
+    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="../static/css/main.css">
+    <link rel="icon" type="image" href="../static/images/favicon.ico">
+</head>
+<body>
+<h1>PiThon</h1>
+<p style="text-align: center">A simple web application for displaying digits of irrational numbers</p>
+
+<div class="flex-container">
+    <div><a href="/">Homepage</a></div>
+    <div><a href="digits_form">Digits Form</a></div>
+    <div><a href="digits_ajax">Digits AJAX</a></div>
+    <div><a href="tic_tac_toe">Tic Tac Toe</a></div>
+</div>
+
+{% block content %} {% endblock %}
+
+<footer>
+    <p>Authors: Joerg Schmid, Felix Scholl</p>
+    <h6><a href="https://github.com/FelixFifi/PiThon">
+        <i class="fa fa-external-link"></i>Check out the source code here</a></h6>
+</footer>
+
+</body>
+</html>
