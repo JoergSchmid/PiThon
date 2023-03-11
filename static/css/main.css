@@ -1,0 +1,42 @@
+h1 {
+    text-align: center;
+    color: dodgerblue;
+}
+body {
+    background-image: url("../images/logo.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+    margin-right: 100px;
+    margin-top: 100px;
+    margin-bottom: 150px;
+    min-height: 400px;
+
+}
+footer {
+    text-align: center;
+    padding: 3px;
+    background-color: darkkhaki;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+table, th, td {
+    border: 1px solid black
+}
+.download_title {
+    color: rgb(200, 64, 64);
+}
+.flex-container {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+.flex-container > div {
+    background-color: lightgrey;
+    text-align: center;
+    width: 80px;
+    line-height: 60px;
+    margin: 10px;
+    font-size: 15px;
+}
