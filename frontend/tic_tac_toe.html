@@ -59,6 +59,18 @@
     ctx.lineWidth = 4;
     resetGame();
 
+    const socket = new WebSocket('ws://' + location.host + '/ttt_server');
+    socket.addEventListener('message', ev => {
+        resultBox.innerHTML = ev.data
+        let pos = JSON.parse(ev.data);
+        placeSign(pos.a, pos.b);
+    });
+
+    function send() {
+    socket.send(input.value);
+    }
+
+
     function placeSign(x, y) {
         /*
             board[] positions:
@@ -243,6 +255,7 @@
         if(isInside(mousePos, rect)) {
             let pos = getGridPos(mousePos.x, mousePos.y)
             placeSign(pos.a, pos.b);
+            socket.send(JSON.stringify(pos));
         }
     })
 

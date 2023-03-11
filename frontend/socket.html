@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+<h1>Flask-Sock Demo</h1>
+    <br>
+    <input id="input" type="text"/>
+    <button type="button" id="action" onclick="send()">Socket</button>
+    <p id="output"></p>
+    <script>
+      const socket = new WebSocket('ws://' + location.host + '/websocket');
+      const output = document.getElementById("output");
+      const input = document.getElementById("input");
+      socket.addEventListener('message', ev => {
+        output.innerHTML = ev.data
+      });
+
+      function send() {
+        socket.send(input.value);
+      }
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import http
 from flask import Flask, request, send_file, render_template, redirect
 from flask_httpauth import HTTPBasicAuth
+from flask_sock import Sock
 from werkzeug.security import check_password_hash
 from database import *
 from irrational_digits import Pi, E, Sqrt2
@@ -114,6 +115,8 @@ def create_app(storage_folder="./db/"):
     app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
     app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
 
+    sock = Sock(app)
+
     auth = HTTPBasicAuth()
 
     create_db_tables(app.config[CONFIG_DB_PATH])
@@ -145,6 +148,43 @@ def create_app(storage_folder="./db/"):
                          endpoint=f"/{number.name}_get_first_ten")
         app.add_url_rule(f"/get_all/{number.name}", view_func=create_get_all_view(number, txt_path),
                          endpoint=f"/{number.name}_get_all")
+
+    @app.route('/websocket')
+    def websocket_page():
+        return render_template("socket.html"), status.OK
+
+    connections = []
+
+    @sock.route('/websocket')
+    def websocket(ws):
+        connections.append(ws)
+        while True:
+            data = ws.receive()
+            broadcast(data)
+
+    def broadcast(data):
+        for ws in connections.copy():
+            if not ws.connected:
+                connections.remove(ws)
+                continue
+            ws.send(data)
+    waiting_games = []
+    game_partners = {}
+
+    @sock.route('/ttt_server')
+    def ttt_server(ws):
+        if len(waiting_games) > 0:
+            game_partners[ws] = waiting_games[0]
+            game_partners[waiting_games[0]] = ws
+            waiting_games.pop(0)
+        else:
+            waiting_games.append(ws)
+
+        while True:
+            data = ws.receive()
+            if ws in game_partners.keys():
+                game_partners[ws].send(data)
+
 
     @app.route('/')
     def homepage():
