@@ -28,6 +28,7 @@ footer {
 table, th, td {
     border: 1px solid black;
     width: fit-content;
+    margin-top: 40px;
 }
 .ctr {
     margin-left: auto;
@@ -36,11 +37,11 @@ table, th, td {
     text-align: center;
 }
 .dark-mode {
-    background-color: rgb(32, 32, 32);
+    background-color: rgb(48, 48, 48);
     color: white;
 }
 .download_title {
-    color: rgb(200, 64, 64);
+    color: dodgerblue;
 }
 .flex-container {
     display: flex;
