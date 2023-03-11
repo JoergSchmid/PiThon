@@ -95,6 +95,13 @@ def create_get_first_ten_view(number_class):
     return get_first_ten_view
 
 
+def create_get_all_view(number_class, txt_path):
+    def get_all_view():
+        return number_class().get_all_from_file(txt_path), status.OK
+
+    return get_all_view
+
+
 def create_app(storage_folder="./db/"):
     """
     Formatted according to https://flask.palletsprojects.com/en/2.2.x/tutorial/factory/
@@ -136,6 +143,8 @@ def create_app(storage_folder="./db/"):
                          endpoint=f"{number.name}_get_database")
         app.add_url_rule(f"/{number.name}/get_first_ten", view_func=create_get_first_ten_view(number),
                          endpoint=f"/{number.name}_get_first_ten")
+        app.add_url_rule(f"/get_all/{number.name}", view_func=create_get_all_view(number, txt_path),
+                         endpoint=f"/{number.name}_get_all")
 
     @app.route('/')
     def homepage():
@@ -162,7 +171,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/digits')
     def digits_view():
-        return render_template("digits_form.html"), status.OK  # Can change to digits_js.html for javascript solution
+        return render_template("digits_form.html"), status.OK
 
     @app.route('/digits/form')
     def digits_form():  # HTML form @ '/digits'
