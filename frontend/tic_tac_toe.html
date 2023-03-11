@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        .ctr {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            text-align: center;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe</title>
+    <link rel="icon" type="image" href="../frontend/favicon.ico">
+</head>
+<body>
+
+<canvas id="board" class="ctr" width="400" height="400" style="border: 4px solid black"></canvas>
+<br>
+<h3 id="result" class="ctr"></h3><br>
+
+<div class="ctr">
+    <input type="button" id="changeSign" value="X first" onclick="changeSign()">
+    <input type="button" id="reset" value="Reset" onclick="resetGame()"><br><br>
+
+    <label for="ai_on">AI</label>
+    <select name="ai_on" id="ai_on" onchange="checkAIon()">
+        <option value="off" selected>off</option>
+        <option value="X">is X</option>
+        <option value="O">is O</option>
+    </select><br>
+    <label for="colorP1">Player X</label>
+    <input type="color" id="colorP1" value="#ff0000"><br>
+    <label for="colorP2">Player O</label>
+    <input type="color" id="colorP2" value="#0000ff">
+</div>
+
+<script>
+    const canvas = document.getElementById("board");
+    const resultBox = document.getElementById("result");
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext("2d");
+    const colorP1 = document.getElementById("colorP1");
+    const colorP2 = document.getElementById("colorP2");
+    colorP1.style.color = colorP1.value;
+    colorP2.style.color = colorP2.value;
+    const sideLength = canvas.height;
+    const thirdLength =  sideLength / 3;
+    const margin = thirdLength / 10;
+    const colorGrid = "black";
+    let colorPlayer = [colorP1.value, colorP2.value];
+    const ai_drawDelay = 500;
+    let playerOneIsX = true
+    let ai_on = document.getElementById("ai_on").value;
+    let is_ai_move = false;
+    let board;
+    let round = 0;
+    let winner = 0;
+    ctx.lineWidth = 4;
+    resetGame();
+
+    function placeSign(x, y) {
+        /*
+            board[] positions:
+            0 1 2
+            3 4 5
+            6 7 8
+            board[] value: 0 = neutral, 1/2 = player 1/2
+         */
+        if (winner !== 0)
+            return;
+        let pos = x+y*3;
+        if(board[pos] !== 0)
+            return;
+        let player = round % 2 === 0 ? 1:2
+        board[pos] = player;
+        winner = checkBoard();
+        if ((player === 1 && playerOneIsX) || (player === 2 && !playerOneIsX)) {
+            drawX(x*thirdLength, y*thirdLength);
+        } else {
+            drawO(x*thirdLength, y*thirdLength);
+        }
+        if(winner !== 0) {
+            resultBox.style.color = colorPlayer[winner-1];
+            resultBox.innerHTML = "Player " + winner.toString() + " won!";
+            return;
+        } else if(round === 8) {
+            resultBox.style.color = "black";
+            resultBox.innerHTML = "It´s a tie!";
+            return;
+        } else {
+            round++;
+        }
+        if(isAiTurn()) {
+            is_ai_move = true;
+            ai_move();
+            is_ai_move = false;
+        }
+    }
+
+    function ai_move() {
+        let rand = Math.trunc(9*Math.random());
+        for(let i = 0; i < 9; i++, rand = (rand+1) % 9) {
+            if (board[rand] === 0) {
+                placeSign(rand % 3, Math.trunc(rand / 3));
+                return;
+            }
+        }
+    }
+
+    function isAiTurn() {
+        return ai_on !== "off" && round % 2 === (playerOneIsX ? (ai_on === "X" ? 0 : 1) : (ai_on === "X" ? 1 : 0));
+    }
+
+    function checkAIon() {
+        ai_on = document.getElementById("ai_on").value;
+        if (isAiTurn())
+            ai_move();
+    }
+
+    function changeSign() {
+        if (round !== 0 && winner === 0) {
+            resultBox.style.color = "black";
+            resultBox.innerHTML = "Finish this round first.";
+            return;
+        }
+        playerOneIsX = !playerOneIsX;
+        document.getElementById("changeSign").value = playerOneIsX ? "X first" : "O first";
+        checkAIon();
+    }
+
+    function getGridPos(x, y) {
+        return {
+            a: Math.trunc(x/thirdLength),
+            b: Math.trunc(y/thirdLength)
+        };
+    }
+
+    function checkBoard() {
+        //rows
+        for(let i = 0; i <=6; i+=3)
+            if (board[i] === board[i+1] && board[i] === board[i+2] && board[i] !== 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = colorPlayer[board[i]-1];
+                ctx.moveTo(0, (i/3)*thirdLength + 0.5*thirdLength);
+                ctx.lineTo(sideLength, (i/3)*thirdLength + 0.5*thirdLength);
+                ctx.stroke();
+                return board[i];
+            }
+
+        //columns
+        for(let i = 0; i<3; i++)
+            if (board[i] === board[i + 3] && board[i] === board[i + 6] && board[i] !== 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = colorPlayer[board[i]-1];
+                ctx.moveTo(i*thirdLength + 0.5*thirdLength, 0);
+                ctx.lineTo(i*thirdLength + 0.5*thirdLength, sideLength);
+                ctx.stroke();
+                return board[i];
+            }
+
+        //diagonals
+        if(board[0] === board[4] && board[0] === board[8] && board[0] !== 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = colorPlayer[board[0]-1];
+            ctx.moveTo(0,0);
+            ctx.lineTo(sideLength, sideLength);
+            ctx.stroke();
+            return board[0];
+        }
+        if(board[2] === board[4] && board[2] === board[6] && board[2] !== 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = colorPlayer[board[2]-1];
+            ctx.moveTo(0,sideLength);
+            ctx.lineTo(sideLength, 0);
+            ctx.stroke();
+            return board[2];
+        }
+
+        return 0;
+    }
+
+    function resetGame() {
+        drawGrid();
+        board = [0,0,0,0,0,0,0,0,0];
+        round = 0;
+        winner = 0;
+        resultBox.innerHTML = "";
+        colorPlayer = [document.getElementById("colorP1").value, document.getElementById("colorP2").value];
+        playerOneIsX = document.getElementById("changeSign").value === "X first";
+        checkAIon();
+    }
+
+    function drawGrid() {
+        ctx.beginPath();
+        ctx.strokeStyle = colorGrid;
+        ctx.clearRect(0,0,sideLength,sideLength);
+        ctx.moveTo(0, thirdLength);
+        ctx.lineTo(sideLength, thirdLength);
+        ctx.moveTo(0, 2 * thirdLength);
+        ctx.lineTo(sideLength, 2 * thirdLength);
+        ctx.moveTo(thirdLength, 0);
+        ctx.lineTo(thirdLength, sideLength);
+        ctx.moveTo(2 * thirdLength, 0);
+        ctx.lineTo(2 * thirdLength, sideLength);
+        ctx.stroke();
+    }
+
+    async function drawX(x, y) {
+        if (is_ai_move)
+            await sleep();
+        ctx.beginPath();
+        ctx.strokeStyle = colorPlayer[playerOneIsX ? 0 : 1];
+        ctx.moveTo(x+margin, y+margin);
+        ctx.lineTo(x+thirdLength-margin, y+thirdLength-margin);
+        ctx.moveTo(x+margin, y+thirdLength-margin);
+        ctx.lineTo(x+thirdLength-margin, y+margin);
+        ctx.stroke();
+    }
+
+    async function drawO(x, y) {
+        if (is_ai_move)
+            await sleep();
+        ctx.beginPath();
+        ctx.strokeStyle = colorPlayer[playerOneIsX ? 1 : 0];
+        ctx.arc(x+(thirdLength/2), y+(thirdLength/2), thirdLength*0.4, 0, 2*Math.PI);
+        ctx.stroke();
+    }
+
+    function getMousePos(event) {
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    }
+
+    function isInside(pos, rect){
+        return pos.x > 0 && pos.x < rect.width && pos.y < rect.y+rect.height && pos.y > rect.y
+    }
+
+    canvas.addEventListener('click', function(evt) {
+        let mousePos = getMousePos(evt);
+        if(isInside(mousePos, rect)) {
+            let pos = getGridPos(mousePos.x, mousePos.y)
+            placeSign(pos.a, pos.b);
+        }
+    })
+
+    function sleep() {
+        return new Promise(resolve => setTimeout(resolve, ai_drawDelay));
+    }
+</script>
+
+</body>
+</html>
