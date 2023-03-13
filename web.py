@@ -156,9 +156,7 @@ def create_app(storage_folder="./db/"):
     @auth.verify_password
     def verify_password(username, password):
         pw_hash = get_password(create_connection(app.config[CONFIG_DB_PATH]), username)
-        if pw_hash is not None and check_password_hash(pw_hash, password):
-            return True
-        return False
+        return pw_hash is not None and check_password_hash(pw_hash, password)
 
     @app.route('/home')
     @auth.login_required
