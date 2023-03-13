@@ -1,5 +1,5 @@
 import http
-from flask import Flask, request, send_file, render_template, redirect
+from flask import Flask, request, send_file, render_template, redirect, session
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
 from database import *
@@ -200,6 +200,82 @@ def create_app(storage_folder="./db/"):
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
         return "File not found", status.NOT_FOUND
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == "POST":
+            username = request.form["username"]
+            password = request.form["password"]
+            if verify_password(username, password):
+                session["username"] = username
+            else:
+                return "Wrong username or password.", status.FORBIDDEN
+            last_page = request.args.get("current_page")
+            if last_page is None:
+                return "Logged in as " + session["username"], status.OK
+            return redirect(last_page), status.FOUND
+
+        return """<form action='' method='POST'>
+                  <input type='text' name='username'><br>
+                  <input type='password' name='password'><br>
+                  <input type='submit' value='Login'>
+                  </form>""", status.OK
+
+    @app.route('/logout')
+    def logout():
+        session.pop('username', None)
+        last_page = request.args.get("current_page")
+        if last_page is None:
+            return "Logged out.", status.OK
+        return redirect(request.args.get("current_page")), status.FOUND
+
+    @app.route('/register', methods=['GET', 'POST'])
+    def register():
+        if request.method == "POST":
+            username = request.form["username"]
+            password = request.form["password"]
+            conn = create_connection(app.config[CONFIG_DB_PATH])
+
+            try:
+                if is_user_existing(conn, username):
+                    return "User already exists.", status.CONFLICT
+
+                if username in FORBIDDEN_NAMES:
+                    return "Illegal name.", status.CONFLICT
+
+                create_user(conn, username, password)
+                session["username"] = username
+                return "Welcome to PiThon, " + username + " :)", status.CREATED
+            except (KeyError, ValueError):
+                return "Invalid Request", status.BAD_REQUEST
+        return """<form action='' method='POST'>
+                    <input type='text' name='username'><br>
+                    <input type='password' name='password'><br>
+                    <input type='submit' value='Register'>
+                    </form>""", status.OK
+
+    @app.route('/delete', methods=['GET', 'POST'])
+    def delete():
+        if request.method == "POST":
+            username = session.get("username")
+            password = request.form["password"]
+            conn = create_connection(app.config[CONFIG_DB_PATH])
+
+            try:
+                if is_admin(username):
+                    return "You can´t delete admins.", status.FORBIDDEN
+                if not check_password_hash(get_password(conn, username), password):
+                    return "Wrong password.", status.FORBIDDEN
+                delete_user(conn, username)
+                return username + " deleted :(", status.OK
+            except (KeyError, ValueError):
+                return "Invalid Request", status.BAD_REQUEST
+        return f"""<form action='' method='POST'>
+                    <p>Confirm password to delete {session.get('username')}.</p><br>
+                    <input type='password' name='password'><br>
+                    <input type='submit' value='Delete'>
+                    </form>""", status.OK
+
 
     @app.get('/admin/users')
     @auth.login_required
