@@ -114,6 +114,7 @@ def create_app(storage_folder="./db/"):
     app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
     app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
 
+    app.secret_key = "PiThon"
     auth = HTTPBasicAuth()
 
     create_db_tables(app.config[CONFIG_DB_PATH])
