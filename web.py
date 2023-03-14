@@ -159,10 +159,6 @@ def create_app(storage_folder="./db/"):
         pw_hash = get_password(create_connection(app.config[CONFIG_DB_PATH]), username)
         return pw_hash is not None and check_password_hash(pw_hash, password)
 
-    @app.route('/home')
-    @auth.login_required
-    def home():
-        return f"Welcome home, {auth.current_user()}!"
 
     @app.route('/tic_tac_toe')
     def tic_tac_toe():
@@ -200,6 +196,11 @@ def create_app(storage_folder="./db/"):
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
         return "File not found", status.NOT_FOUND
+
+
+    @app.route('/profile')
+    def profile():
+        return render_template("profile.jinja", username=session.get("username")), status.OK
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
@@ -275,7 +276,6 @@ def create_app(storage_folder="./db/"):
                     <input type='password' name='password'><br>
                     <input type='submit' value='Delete'>
                     </form>""", status.OK
-
 
     @app.get('/admin/users')
     @auth.login_required
