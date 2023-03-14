@@ -9,12 +9,23 @@ body {
     background-image: url("../images/logo.png");
     background-repeat: no-repeat;
     background-position: right top;
+    background-color: rgb(240, 240, 240);
     margin-left: 10px;
     margin-right: 10px;
     margin-top: 20px;
     margin-bottom: 150px;
     min-height: 400px;
-
+}
+body.dark-mode {
+    background-image: url("../images/logo.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+    background-color: rgb(48,48,48);
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 20px;
+    margin-bottom: 150px;
+    min-height: 400px;
 }
 footer {
     text-align: center;

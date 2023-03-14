@@ -197,6 +197,13 @@ def create_app(storage_folder="./db/"):
             return send_file(path, as_attachment=True), status.OK
         return "File not found", status.NOT_FOUND
 
+    @app.route('/toggle_theme')
+    def toggle_theme():
+        if session.get("theme") == "dark":
+            session["theme"] = "light"
+        else:
+            session["theme"] = "dark"
+        return redirect(request.args.get("current_page")), status.FOUND
 
     @app.route('/profile')
     def profile():
