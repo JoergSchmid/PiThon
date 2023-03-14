@@ -207,7 +207,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/profile')
     def profile():
-        return render_template("profile.jinja", username=session.get("username")), status.OK
+        return render_template("profile.jinja"), status.OK
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
