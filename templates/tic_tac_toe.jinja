@@ -1,19 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <style>
-        .ctr {
-            margin-left: auto;
-            margin-right: auto;
-            display: block;
-            text-align: center;
-        }
-    </style>
-    <meta charset="UTF-8">
-    <title>Tic Tac Toe</title>
-    <link rel="icon" type="image" href="../frontend/favicon.ico">
-</head>
-<body>
+{% extends 'base.jinja' %}
+
+{% block title %} Tic Tac Toe {% endblock %}
+
+{% block content %}
+
 
 <canvas id="board" class="ctr" width="400" height="400" style="border: 4px solid black"></canvas>
 <br>
@@ -235,7 +225,7 @@
     }
 
     function isInside(pos, rect){
-        return pos.x > 0 && pos.x < rect.width && pos.y < rect.y+rect.height && pos.y > rect.y
+        return pos.x > 0 && pos.x < rect.width && pos.y < rect.y+rect.height && pos.y > 0
     }
 
     canvas.addEventListener('click', function(evt) {
@@ -250,6 +240,4 @@
         return new Promise(resolve => setTimeout(resolve, ai_drawDelay));
     }
 </script>
-
-</body>
-</html>
+{% endblock %}

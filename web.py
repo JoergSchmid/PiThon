@@ -108,7 +108,7 @@ def create_app(storage_folder="./db/"):
     :param storage_folder: folder the database should use
     :return: app
     """
-    app = Flask(__name__, static_folder="frontend", template_folder="frontend")
+    app = Flask(__name__)
     app.config[CONFIG_DB_PATH] = Path(storage_folder) / "pithon.db"
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
     app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
@@ -148,7 +148,7 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/')
     def homepage():
-        return render_template("homepage.html"), status.OK
+        return render_template("homepage.jinja"), status.OK
 
     def is_admin(user):
         return user == TEST_USER_ADMIN[0]
@@ -165,13 +165,17 @@ def create_app(storage_folder="./db/"):
     def home():
         return f"Welcome home, {auth.current_user()}!"
 
-    @app.route('/tic-tac-toe')
+    @app.route('/tic_tac_toe')
     def tic_tac_toe():
-        return render_template("tic_tac_toe.html")
+        return render_template("tic_tac_toe.jinja")
 
-    @app.route('/digits')
+    @app.route('/digits_form')
     def digits_view():
-        return render_template("digits_form.html"), status.OK
+        return render_template("digits_form.jinja"), status.OK
+
+    @app.route('/digits_ajax')
+    def digits_ajax_view():
+        return render_template("digits_ajax.jinja"), status.OK
 
     @app.route('/digits/form')
     def digits_form():  # HTML form @ '/digits'

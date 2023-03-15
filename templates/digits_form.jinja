@@ -1,0 +1,39 @@
+{% extends 'base.jinja' %}
+
+{% block title %}Digits{% endblock %}
+
+{% block content %}
+
+<div class="ctr">
+  <h2>Digits</h2>
+
+  <form action="/digits/form" target="_blank" method="get">
+
+    <!--Dropdown menu-->
+    <label for="number_selection"></label>
+    <select name="number_selection" id="number_selection">
+      <option value="pi">Pi</option>
+      <option value="e">E</option>
+      <option value="sqrt2">Sqrt2</option>
+    </select><br>
+
+    <!--Reset checkbox-->
+    <input type="checkbox" id="reset" name="reset" value="Reset">
+    <label for="reset">Reset number</label><br><br>
+
+    <!--Radio button group-->
+    <input type="radio" id="next_ten" name="choose_mode" value="next_ten" checked="checked">
+    <label for="next_ten">Next ten digits</label><br>
+    <input type="radio" id="one_digit" name="choose_mode" value="one_digit">
+    <label for="one_digit">One digit at</label><br>
+
+    <!--Number input-->
+    <label for="input_index"></label>
+    <input type="number" id="input_index" name="index" value="0">
+    <br><br>
+
+    <!--Submit button-->
+    <input type="submit" id="submit" value="Submit">
+</div>
+
+{% endblock %}

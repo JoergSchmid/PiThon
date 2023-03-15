@@ -1,0 +1,63 @@
+{% extends 'base.jinja' %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+
+<div class="ctr">
+    <table class="ctr">
+        <thead>
+        <tr>
+            <th></th>
+            <th>0</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+            <th>7</th>
+            <th>8</th>
+            <th>9</th>
+        </tr>
+        </thead>
+        <tbody id="table_body"></tbody>
+    </table>
+    <script>
+        const table = document.getElementById("table_body");
+
+        function httpGet(url) {
+            let r = new XMLHttpRequest();
+            r.open("GET", url, false);
+            r.send(null);
+            return r.responseText;
+        }
+
+        let row1 = table.insertRow();
+        let row2 = table.insertRow();
+        let row3 = table.insertRow();
+
+        row1.insertCell(0).innerHTML = "Pi";
+        row2.insertCell(0).innerHTML = "e";
+        row3.insertCell(0).innerHTML = "Sqrt(2)";
+
+        const pi_ten = httpGet(window.location.origin + "/pi/get_first_ten");
+        const e_ten = httpGet(window.location.origin + "/e/get_first_ten");
+        const sqrt2_ten = httpGet(window.location.origin + "/sqrt2/get_first_ten");
+
+        for (let i = 0; i < 10; i++) {
+            row1.insertCell(i+1).innerHTML = pi_ten[i];
+            row2.insertCell(i+1).innerHTML = e_ten[i];
+            row3.insertCell(i+1).innerHTML = sqrt2_ten[i];
+        }
+    </script>
+    <br><br>
+
+    <h2 style="margin-bottom: auto">Download number files:</h2>
+    <ul style="display: inline-block">
+        <li><a href="/digits/pi">Pi</a></li>
+        <li><a href="/digits/e">E</a></li>
+        <li><a href="/digits/sqrt2">Sqrt2</a></li>
+    </ul>
+</div>
+{% endblock %}
