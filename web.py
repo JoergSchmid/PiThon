@@ -159,7 +159,6 @@ def create_app(storage_folder="./db/"):
         pw_hash = get_password(create_connection(app.config[CONFIG_DB_PATH]), username)
         return pw_hash is not None and check_password_hash(pw_hash, password)
 
-
     @app.route('/tic_tac_toe')
     def tic_tac_toe():
         return render_template("tic_tac_toe.jinja")
@@ -253,7 +252,10 @@ def create_app(storage_folder="./db/"):
 
                 create_user(conn, username, password)
                 session["username"] = username
-                return "Welcome to PiThon, " + username + " :)", status.CREATED
+                last_page = request.args.get("current_page")
+                if last_page is None:
+                    return "Welcome to PiThon, " + username + " :)", status.CREATED
+                return redirect(request.args.get("current_page")), status.CREATED
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
         return """<form action='' method='POST'>

@@ -7,6 +7,7 @@
 <div class="ctr">
     {% if session["username"] == null %}
     <input type="button" id="btn_login" value="Login" onclick="login()">
+    <input type="button" id="btn_register" value="No account? Register now!" onclick="register()">
     {% else %}
     <p>Logged in as {{session["username"]}}</p>
     <input type="button" id="btn_logout" value="Logout" onclick="logout()">
