@@ -277,6 +277,7 @@ def create_app(storage_folder="./db/"):
                 if not check_password_hash(get_password(conn, username), password):
                     return "Wrong password.", status.FORBIDDEN
                 delete_user(conn, username)
+                session.pop('username', None)
                 return username + " deleted :(", status.OK
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
