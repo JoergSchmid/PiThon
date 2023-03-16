@@ -9,11 +9,9 @@
 </head>
 <body {% if session["theme"] == "dark" %} class="dark-mode" {% endif %}>
 
-{% if session["username"] == null %}
-<input type="button" id="login" value="Login" onclick="login()">
-{% else %}
-<input type="button" id="logout" value="Logged in as {{session['username']}}" onclick="profile()">
-{% endif %}
+<input type="button" id="btn_profile"  onclick="profile()"
+    {% if session["username"] == null %} value="Login"
+    {% else %} value="{{session['username']}}" {% endif %}>
 <input type="button" id="toggleDM" value="Toggle darkmode" onclick="toggleDarkMode()">
 <script>
     btn_dm = document.getElementById("toggleDM");
