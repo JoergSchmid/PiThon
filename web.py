@@ -241,6 +241,10 @@ def create_app(storage_folder="./db/"):
         if request.method == "POST":
             username = request.form["username"]
             password = request.form["password"]
+
+            if request.form["confirm_password"] != password:
+                return "Password confirmation failed.", status.FORBIDDEN
+
             conn = create_connection(app.config[CONFIG_DB_PATH])
 
             try:
@@ -261,6 +265,7 @@ def create_app(storage_folder="./db/"):
         return """<form action='' method='POST'>
                     <input type='text' name='username'><br>
                     <input type='password' name='password'><br>
+                    <input type='password' name='confirm_password'><br>
                     <input type='submit' value='Register'>
                     </form>""", status.OK
 
