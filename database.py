@@ -118,7 +118,11 @@ def delete_user(conn, user):
     user_id = db_execute(conn, "SELECT user_id FROM users WHERE username =:username", {'username': user})
     if user_id is None:
         return
-    db_execute(conn, "DELETE FROM users WHERE username =:username", {'username': user[0]})
+    # user var is a tuple when called with a delete request
+    if len(user[0]) == 1:
+        db_execute(conn, "DELETE FROM users WHERE username =:username", {'username': user})
+    else:
+        db_execute(conn, "DELETE FROM users WHERE username =:username", {'username': user[0]})
 
 
 def is_user_existing(conn, user):
