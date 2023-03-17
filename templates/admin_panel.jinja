@@ -1,0 +1,20 @@
+{% extends 'base.jinja' %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+
+<!-- Create a table of all users -->
+<p id="user_table"></p>
+<script>
+    const user_list = {{user_list}};
+    const xmlhttp = new XMLHttpRequest();
+    let text = "<table border='1'>";
+    for(let i in user_list) {
+        text += "<tr><td>" + user_list[i] + "</td><td><a href='/admin/delete?user=" + user_list[i] + "'>delete</a></tr>";
+    }
+    text += "</table>";
+    document.getElementById("user_table").innerHTML = text;
+</script>
+
+{% endblock %}

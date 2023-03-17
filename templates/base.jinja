@@ -13,6 +13,9 @@
     {% if session["username"] == null %} value="Login"
     {% else %} value="{{session['username']}}" {% endif %}>
 <input type="button" id="toggleDM" value="Toggle darkmode" onclick="toggleDarkMode()">
+{% if session["username"] == "joerg" %}
+    <input type="button" id="adminPanel" value="Admin Panel" onclick="adminPanel()">
+{% endif %}
 <script>
     btn_dm = document.getElementById("toggleDM");
     navbar = document.getElementById("flexboxContainer");
@@ -39,6 +42,10 @@
 
     function delete_user() {
         window.location.href = "../delete";
+    }
+
+    function adminPanel() {
+        window.location.href = "../admin";
     }
 </script>
 

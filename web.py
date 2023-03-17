@@ -242,6 +242,9 @@ def create_app(storage_folder="./db/"):
             username = request.form["username"]
             password = request.form["password"]
 
+            if len(username) < 2:
+                return "Username too short. 2+ characters required.", status.FORBIDDEN
+
             if request.form["confirm_password"] != password:
                 return "Password confirmation failed.", status.FORBIDDEN
 
@@ -293,6 +296,30 @@ def create_app(storage_folder="./db/"):
                     <input type='password' name='password'><br>
                     <input type='submit' value='Delete'>
                     </form>""", status.OK
+
+    @app.route('/admin')
+    def admin():
+        username = session.get("username")
+        if username is None or not is_admin(username):
+            return """<p>Only admins are allowed.</p><br>
+                      <a href="/"'>Back to Homepage</a>""", status.FORBIDDEN
+
+        user_list = get_all_user_names(create_connection(app.config[CONFIG_DB_PATH]))
+        return render_template("admin_panel.jinja", user_list=user_list), status.OK
+
+    @app.route('/admin/delete')
+    def admin_delete():
+        username = session.get("username")
+        if username is None or not is_admin(username):
+            return """<p>Only admins are allowed.</p><br>
+                          <a href="/"'>Back to Homepage</a>""", status.FORBIDDEN
+
+        user = request.args.get("user")
+        if is_admin(user):
+            return "You can´t delete admins.", status.FORBIDDEN
+
+        delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
+        return redirect("/admin"), status.OK
 
     @app.get('/admin/users')
     @auth.login_required
