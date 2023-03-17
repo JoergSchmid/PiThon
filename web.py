@@ -283,7 +283,9 @@ def create_app(storage_folder="./db/"):
                     return "Wrong password.", status.FORBIDDEN
                 delete_user(conn, username)
                 session.pop('username', None)
-                return username + " deleted :(", status.OK
+                return f"""<p>{username} deleted :(</p><br>
+                            <a href="/"'>Back to Homepage</a>
+                            """
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
         return f"""<form action='' method='POST'>
