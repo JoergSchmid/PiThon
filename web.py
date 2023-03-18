@@ -147,12 +147,33 @@ def create_app(storage_folder="./db/"):
         app.add_url_rule(f"/get_all/{number.name}", view_func=create_get_all_view(number, txt_path),
                          endpoint=f"/{number.name}_get_all")
 
+    def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password=""):
+        conn = create_connection(app.config[CONFIG_DB_PATH])
+
+        username = is_existing if is_existing is not "" else is_admin
+        if check_password is not "" and username is "":
+            print("Internal error. Requested password check without providing a username to check_for_error().")
+            return True, "Internal error.", status.INTERNAL_SERVER_ERROR
+
+        if is_existing is not "" and not is_user_existing(conn, is_existing):
+            return True, "User does not exist.", status.NOT_FOUND
+        if is_not_existing is not "" and is_user_existing(conn, is_existing):
+            return True, "User already exists.", status.CONFLICT
+        if username is not "" and username in FORBIDDEN_NAMES:
+            return True, "Illegal name.", status.CONFLICT
+        if is_admin is not "" and is_admin != TEST_USER_ADMIN[0]:
+            return True, "Admin access only.", status.FORBIDDEN
+        if check_password is not "" and not check_password_hash(get_password(conn, username), check_password):
+            return True, "Wrong username or password.", status.FORBIDDEN
+        if username is not "" and len(username) < 2:
+            return True, "Name too short.", status.FORBIDDEN
+
+        return False, None, None
+
+
     @app.route('/')
     def homepage():
         return render_template("homepage.jinja"), status.OK
-
-    def is_admin(user):
-        return user == TEST_USER_ADMIN[0]
 
     @auth.verify_password
     def verify_password(username, password):
@@ -280,10 +301,10 @@ def create_app(storage_folder="./db/"):
             conn = create_connection(app.config[CONFIG_DB_PATH])
 
             try:
-                if is_admin(username):
-                    return "You can´t delete admins.", status.FORBIDDEN
-                if not check_password_hash(get_password(conn, username), password):
-                    return "Wrong password.", status.FORBIDDEN
+                check = check_for_error(is_admin=username, check_password=password)
+                if check[0]:
+                    return check[1], check[2]
+
                 delete_user(conn, username)
                 session.pop('username', None)
                 return f"""<p>{username} deleted :(</p><br>
@@ -300,9 +321,10 @@ def create_app(storage_folder="./db/"):
     @app.route('/admin')
     def admin():
         username = session.get("username")
-        if username is None or not is_admin(username):
-            return """<p>Only admins are allowed.</p><br>
-                      <a href="/"'>Back to Homepage</a>""", status.FORBIDDEN
+        check = check_for_error(is_admin=username)
+        if check[0]:
+            return f"""<p>{check[1]}</p><br>
+                       <a href="/"'>Back to Homepage</a>""", check[2]
 
         user_list = get_all_user_names(create_connection(app.config[CONFIG_DB_PATH]))
         return render_template("admin_panel.jinja", user_list=user_list), status.OK
@@ -310,12 +332,13 @@ def create_app(storage_folder="./db/"):
     @app.route('/admin/delete')
     def admin_delete():
         username = session.get("username")
-        if username is None or not is_admin(username):
-            return """<p>Only admins are allowed.</p><br>
-                          <a href="/"'>Back to Homepage</a>""", status.FORBIDDEN
+        check = check_for_error(is_admin=username)
+        if check[0]:
+            return f"""<p>{check[1]}</p><br>
+                       <a href="/"'>Back to Homepage</a>""", check[2]
 
         user = request.args.get("user")
-        if is_admin(user):
+        if check_for_error(is_admin=user)[0]:
             return "You can´t delete admins.", status.FORBIDDEN
 
         delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
@@ -324,8 +347,9 @@ def create_app(storage_folder="./db/"):
     @app.get('/admin/users')
     @auth.login_required
     def admin_get_all_users():
-        if not is_admin(auth.current_user()):
-            return "Unauthorized. Admin access only.", status.FORBIDDEN
+        check = check_for_error(is_admin=auth.current_user())
+        if check[0]:
+            return check[1], check[2]
 
         conn = create_connection(app.config[CONFIG_DB_PATH])
 
@@ -338,18 +362,17 @@ def create_app(storage_folder="./db/"):
         if not request.is_json:
             return {"error": "Request must be JSON"}, status.UNSUPPORTED_MEDIA_TYPE
 
-        if not is_admin(auth.current_user()):
-            return "Unauthorized. Admin access only.", status.FORBIDDEN
+        check = check_for_error(is_admin=auth.current_user())
+        if check[0]:
+            return check[1], check[2]
 
         data = request.get_json()
         conn = create_connection(app.config[CONFIG_DB_PATH])
 
         try:
-            if is_user_existing(conn, data["username"]):
-                return "User already exists.", status.CONFLICT
-
-            if data["username"] in FORBIDDEN_NAMES:
-                return "Illegal name.", status.CONFLICT
+            check = check_for_error(is_not_existing=data["username"])
+            if check[0]:
+                return check[1], check[2]
 
             create_user(conn, data["username"], data["password"])
             return data["username"], status.CREATED
@@ -362,19 +385,14 @@ def create_app(storage_folder="./db/"):
         if not request.is_json:
             return {"error": "Request must be JSON"}, status.UNSUPPORTED_MEDIA_TYPE
 
-        if not is_admin(auth.current_user()):
-            return "Unauthorized. Admin access only.", status.FORBIDDEN
-
-        if user is None:
-            return "No user input found.", status.BAD_REQUEST
+        check = check_for_error(is_existing=user, is_admin=auth.current_user())
+        if check[0]:
+            return check[1], check[2]
 
         data = request.get_json()
         conn = create_connection(app.config[CONFIG_DB_PATH])
 
         try:
-            if not is_user_existing(conn, user):
-                return "User does not exist.", status.NOT_FOUND
-
             change_password(conn, user, data["password"])
             return {"username": user, "password": "***"}, status.CREATED
         except (KeyError, ValueError):
@@ -383,8 +401,9 @@ def create_app(storage_folder="./db/"):
     @app.delete('/admin/reset_all_indices')
     @auth.login_required
     def admin_reset_all_indices():
-        if not is_admin(auth.current_user()):
-            return "Unauthorized. Admin access only.", status.FORBIDDEN
+        check = check_for_error(is_admin=auth.current_user())
+        if check[0]:
+            return check[1], check[2]
 
         reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
         return "All indices are reset.", status.OK
@@ -392,18 +411,11 @@ def create_app(storage_folder="./db/"):
     @app.delete('/admin/users/<user>')
     @auth.login_required
     def admin_delete_user(user):
-        if not is_admin(auth.current_user()):
-            return "Unauthorized. Admin access only.", status.FORBIDDEN
+        check = check_for_error(is_existing=user, is_admin=auth.current_user())
+        if check[0]:
+            return check[1], check[2]
 
-        if user is None:
-            return "No user input found. Please use '?user='", status.BAD_REQUEST
-
-        conn = create_connection(app.config[CONFIG_DB_PATH])
-
-        if not is_user_existing(conn, user):
-            return "User not found.", status.NOT_FOUND
-
-        delete_user(conn, user)
+        delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
         return {}, status.OK
 
     @app.after_request
