@@ -170,6 +170,9 @@ def create_app(storage_folder="./db/"):
 
         return False, None, None
 
+    def fancy_message(text, http_status, link_message="Continue", page=""):
+        return f"""<p>{text}</p><br>
+                   <a href=/{page}>{link_message}</a>""", http_status
 
     @app.route('/')
     def homepage():
@@ -277,7 +280,7 @@ def create_app(storage_folder="./db/"):
                 session["username"] = username
                 last_page = request.args.get("current_page")
                 if last_page is None:
-                    return "Welcome to PiThon, " + username + " :)", status.CREATED
+                    return fancy_message("Welcome to PiThon, " + username + " :)", status.CREATED)
                 return redirect(request.args.get("current_page")), status.CREATED
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
@@ -302,9 +305,7 @@ def create_app(storage_folder="./db/"):
 
                 delete_user(conn, username)
                 session.pop('username', None)
-                return f"""<p>{username} deleted :(</p><br>
-                            <a href="/"'>Back to Homepage</a>
-                            """
+                return fancy_message(f"{username} deleted :(", status.OK)
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
         return f"""<form action='' method='POST'>
@@ -318,8 +319,7 @@ def create_app(storage_folder="./db/"):
         username = session.get("username")
         check = check_for_error(is_admin=username)
         if check[0]:
-            return f"""<p>{check[1]}</p><br>
-                       <a href="/"'>Back to Homepage</a>""", check[2]
+            return fancy_message(f"{check[1]}", check[2])
 
         user_list = get_all_user_names(create_connection(app.config[CONFIG_DB_PATH]))
         return render_template("admin_panel.jinja", user_list=user_list), status.OK
@@ -329,8 +329,7 @@ def create_app(storage_folder="./db/"):
         username = session.get("username")
         check = check_for_error(is_admin=username)
         if check[0]:
-            return f"""<p>{check[1]}</p><br>
-                       <a href="/"'>Back to Homepage</a>""", check[2]
+            return fancy_message(f"{check[1]}", check[2])
 
         user = request.args.get("user")
         if check_for_error(is_admin=user)[0]:
