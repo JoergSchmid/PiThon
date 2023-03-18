@@ -191,7 +191,7 @@ def create_number_digits_table(conn):
 
 
 def create_sql_indices(conn):
-    db_execute(conn, "CREATE INDEX number_digits_idx ON number_digits (number, digit_index)", {})
+    db_execute(conn, "CREATE INDEX IF NOT EXISTS number_digits_idx ON number_digits (number, digit_index)", {})
 
 
 def create_test_users(conn):
