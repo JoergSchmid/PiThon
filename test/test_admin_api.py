@@ -29,9 +29,9 @@ def test_only_admin_can_get_users(client):
 
 def test_only_admin_can_post_new_user(client):
     client.delete("/admin/users/test_user", auth=TEST_USER_ADMIN)  # Delete test_user in case they exist
-
-    assert client.post("/admin/users").status_code == status.UNAUTHORIZED
-    assert client.post("/admin/users", auth=TEST_USER_STD).status_code == status.UNSUPPORTED_MEDIA_TYPE  # No json
+    assert client.post("/admin/users",
+                       json={"username": "test_user", "password": "test_password"}).status_code == status.UNAUTHORIZED
+    assert client.post("/admin/users", auth=TEST_USER_ADMIN).status_code == status.UNSUPPORTED_MEDIA_TYPE  # No json
     assert client.post("/admin/users", auth=TEST_USER_STD,
                        json={"username": "test_user", "password": "wrong_password"}).status_code == status.FORBIDDEN
     assert client.post("/admin/users", auth=TEST_USER_ADMIN,
@@ -40,8 +40,9 @@ def test_only_admin_can_post_new_user(client):
 
 def test_only_admin_can_patch_new_password(app, client_with_test_user):
     client = client_with_test_user
-    assert client.patch("/admin/users/test_user").status_code == status.UNAUTHORIZED
-    assert client.patch("/admin/users/test_user", auth=TEST_USER_STD).status_code == status.UNSUPPORTED_MEDIA_TYPE
+    assert client.patch("/admin/users/test_user",
+                        json={"password": "new_test_password"}).status_code == status.UNAUTHORIZED
+    assert client.patch("/admin/users/test_user", auth=TEST_USER_ADMIN).status_code == status.UNSUPPORTED_MEDIA_TYPE
     assert client.patch("/admin/users/test_user", auth=TEST_USER_STD,
                         json={"password": "wrong_password"}).status_code == status.FORBIDDEN
     assert client.patch("/admin/users/test_user", auth=TEST_USER_ADMIN,
