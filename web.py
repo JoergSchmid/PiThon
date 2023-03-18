@@ -263,21 +263,16 @@ def create_app(storage_folder="./db/"):
             username = request.form["username"]
             password = request.form["password"]
 
-            if len(username) < 2:
-                return "Username too short. 2+ characters required.", status.FORBIDDEN
-
             if request.form["confirm_password"] != password:
                 return "Password confirmation failed.", status.FORBIDDEN
+
+            check = check_for_error(is_not_existing=username)
+            if check[0]:
+                return check[1], check[2]
 
             conn = create_connection(app.config[CONFIG_DB_PATH])
 
             try:
-                if is_user_existing(conn, username):
-                    return "User already exists.", status.CONFLICT
-
-                if username in FORBIDDEN_NAMES:
-                    return "Illegal name.", status.CONFLICT
-
                 create_user(conn, username, password)
                 session["username"] = username
                 last_page = request.args.get("current_page")
