@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" class="{{ 'dark-mode' if session.get('theme') == 'dark' }}">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>{% block title %} {% endblock %} - PiThon</title>
@@ -7,8 +8,11 @@
     <link rel="stylesheet" href="../static/css/main.css">
     <link rel="icon" type="image" href="../static/images/favicon.ico">
 </head>
+
+
 <body {% if session["theme"] == "dark" %} class="dark-mode" {% endif %}>
 
+<!-- Top Left buttons -->
 <input type="button" id="btn_profile"  onclick="profile()"
     {% if session["username"] == null %} value="Login"
     {% else %} value="{{session['username']}}" {% endif %}>
@@ -16,9 +20,23 @@
 {% if session["username"] == "joerg" %}
     <input type="button" id="adminPanel" value="Admin Panel" onclick="adminPanel()">
 {% endif %}
+
+<!-- Top Text/description -->
+<h1>PiThon</h1>
+<p style="text-align: center">A simple web application for displaying digits of irrational numbers</p>
+
+<!-- Top navigation bar to other pages -->
+<div class="flex-container" id="navBar">
+    <div><a href="/">Homepage</a></div>
+    <div><a href="digits_form">Digits Form</a></div>
+    <div><a href="digits_ajax">Digits AJAX</a></div>
+    <div><a href="tic_tac_toe">Tic Tac Toe</a></div>
+</div><br>
+
+<!-- Define functions to link to other pages -->
 <script>
     btn_dm = document.getElementById("toggleDM");
-    navbar = document.getElementById("flexboxContainer");
+    navbar = document.getElementById("navBar");
 
     function toggleDarkMode() {
         window.location.href = "../toggle_theme?current_page=" + window.location.pathname;
@@ -49,18 +67,9 @@
     }
 </script>
 
-<h1>PiThon</h1>
-<p style="text-align: center">A simple web application for displaying digits of irrational numbers</p>
-
-<div class="flex-container" id="flexContainer">
-    <div><a href="/">Homepage</a></div>
-    <div><a href="digits_form">Digits Form</a></div>
-    <div><a href="digits_ajax">Digits AJAX</a></div>
-    <div><a href="tic_tac_toe">Tic Tac Toe</a></div>
-</div><br>
-
 {% block content %} {% endblock %}
 
+<!-- Footer including authors and a link to github page -->
 <footer>
     <p>Authors: Joerg Schmid, Felix Scholl</p>
     <h6><a href="https://github.com/FelixFifi/PiThon">
