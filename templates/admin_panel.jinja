@@ -8,10 +8,11 @@
 <p id="user_table"></p>
 <script>
     const user_list = {{user_list}};
+    const rank_list = {{rank_list}};
     const xmlhttp = new XMLHttpRequest();
     let text = "<table border='1'>";
     for(let i in user_list) {
-        text += "<tr><td>" + user_list[i] + "</td><td><a href='/admin/delete?user=" + user_list[i] + "'>delete</a></tr>";
+        text += "<tr><td>" + user_list[i] + "</td><td><a href='/admin/delete?user=" + user_list[i] + "'>delete</a><td>" + rank_list[i] + "</td></tr>";
     }
     text += "</table>";
     document.getElementById("user_table").innerHTML = text;

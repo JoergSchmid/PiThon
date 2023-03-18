@@ -86,6 +86,20 @@ def get_password(conn, user):
     return pw[0]
 
 
+def get_rank(conn, user):
+    rank = db_execute(conn, "SELECT rank FROM users WHERE username =:username", {'username': user})
+    return rank[0] if rank is not None else None
+
+
+def change_rank(conn, user, rank):
+    db_execute(conn, "UPDATE users SET rank =:rank WHERE username =:username",
+               {'rank': rank, 'username': user})
+
+
+def get_all_users_data(conn):
+    return db_execute(conn, "SELECT username, rank FROM users", {}, fetchall=True)
+
+
 def change_password(conn, user, password):
     db_execute(conn, "UPDATE users SET password =:password WHERE username =:username",
                {'password': generate_password_hash(password), 'username': user})
@@ -103,11 +117,11 @@ def get_all_user_names(conn):
     return usernames
 
 
-def create_user(conn, user, password):
+def create_user(conn, user, password, rank="std"):
     if is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
         return None
-    db_execute(conn, "INSERT INTO users (username, password) VALUES (:username, :password)",
-               {'username': user, 'password': generate_password_hash(password)})
+    db_execute(conn, "INSERT INTO users (username, password, rank) VALUES (:username, :password, :rank)",
+               {'username': user, 'password': generate_password_hash(password), 'rank': rank})
     user_id = db_execute(conn, "SELECT user_id FROM users WHERE username =:username", {'username': user})
     db_execute(conn, "INSERT INTO number_indices (user_id, number)"
                      "VALUES (:user_id, :pi), (:user_id, :e), (:user_id, :sqrt2)",
@@ -166,7 +180,8 @@ def create_users_table(conn):
     db_execute(conn, """ CREATE TABLE IF NOT EXISTS users (
                     user_id integer PRIMARY KEY AUTOINCREMENT,
                     username text NOT NULL,
-                    password text NOT NULL
+                    password text NOT NULL,
+                    rank text NOT NULL
                     ); """, {})
 
 
@@ -199,5 +214,5 @@ def create_test_users(conn):
     # Permanent users are created on the admin endpoint.
     delete_user(conn, TEST_USER_ADMIN[0])
     delete_user(conn, TEST_USER_STD[0])
-    create_user(conn, TEST_USER_ADMIN[0], TEST_USER_ADMIN[1])
+    create_user(conn, TEST_USER_ADMIN[0], TEST_USER_ADMIN[1], rank="admin")
     create_user(conn, TEST_USER_STD[0], TEST_USER_STD[1])

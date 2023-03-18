@@ -161,7 +161,7 @@ def create_app(storage_folder="./db/"):
             return True, "User already exists.", status.CONFLICT
         if username is not "" and username in FORBIDDEN_NAMES:
             return True, "Illegal name.", status.CONFLICT
-        if is_admin is not "" and is_admin != TEST_USER_ADMIN[0]:
+        if is_admin is not "" and get_rank(conn, is_admin) != "admin":
             return True, "Admin access only.", status.FORBIDDEN
         if check_password is not "" and not check_password_hash(get_password(conn, username), check_password):
             return True, "Wrong username or password.", status.FORBIDDEN
@@ -323,8 +323,11 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return fancy_message(f"{check[1]}", check[2])
 
-        user_list = get_all_user_names(create_connection(app.config[CONFIG_DB_PATH]))
-        return render_template("admin_panel.jinja", user_list=user_list), status.OK
+        data = get_all_users_data(create_connection(app.config[CONFIG_DB_PATH]))
+        users, ranks = zip(*data)
+        user_list = list(users)
+        rank_list = list(ranks)
+        return render_template("admin_panel.jinja", user_list=user_list, rank_list=rank_list), status.OK
 
     @app.route('/admin/delete')
     def admin_delete():
