@@ -147,7 +147,7 @@ def create_app(storage_folder="./db/"):
         app.add_url_rule(f"/get_all/{number.name}", view_func=create_get_all_view(number, txt_path),
                          endpoint=f"/{number.name}_get_all")
 
-    def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password=""):
+    def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None):
         conn = create_connection(app.config[CONFIG_DB_PATH])
 
         username = is_existing if is_existing is not "" else is_admin
@@ -167,6 +167,8 @@ def create_app(storage_folder="./db/"):
             return True, "Wrong username or password.", status.FORBIDDEN
         if username is not "" and len(username) < 2:
             return True, "Name too short.", status.FORBIDDEN
+        if check_request is not None and not check_request.is_json:
+            return True, "Request must be JSON.", status.UNSUPPORTED_MEDIA_TYPE
 
         return False, None, None
 
@@ -353,10 +355,7 @@ def create_app(storage_folder="./db/"):
     @app.post('/admin/users')
     @auth.login_required
     def admin_add_user():
-        if not request.is_json:
-            return {"error": "Request must be JSON"}, status.UNSUPPORTED_MEDIA_TYPE
-
-        check = check_for_error(is_admin=auth.current_user())
+        check = check_for_error(is_admin=auth.current_user(), check_request=request)
         if check[0]:
             return check[1], check[2]
 
@@ -376,10 +375,7 @@ def create_app(storage_folder="./db/"):
     @app.patch('/admin/users/<user>')
     @auth.login_required
     def admin_change_password(user):
-        if not request.is_json:
-            return {"error": "Request must be JSON"}, status.UNSUPPORTED_MEDIA_TYPE
-
-        check = check_for_error(is_existing=user, is_admin=auth.current_user())
+        check = check_for_error(is_existing=user, is_admin=auth.current_user(), check_request=request)
         if check[0]:
             return check[1], check[2]
 
