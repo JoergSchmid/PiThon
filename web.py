@@ -296,7 +296,7 @@ def create_app(storage_folder="./db/"):
             conn = create_connection(app.config[CONFIG_DB_PATH])
 
             try:
-                check = check_for_error(is_admin=username, check_password=password)
+                check = check_for_error(is_existing=username, check_password=password)
                 if check[0]:
                     return check[1], check[2]
 
