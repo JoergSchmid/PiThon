@@ -150,22 +150,22 @@ def create_app(storage_folder="./db/"):
     def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None):
         conn = create_connection(app.config[CONFIG_DB_PATH])
 
-        username = is_existing if is_existing is not "" else is_admin
-        if check_password is not "" and username is "":
+        username = is_existing if is_existing != "" else is_admin
+        if check_password != "" and username == "":
             print("Internal error. Requested password check without providing a username to check_for_error().")
             return True, "Internal error.", status.INTERNAL_SERVER_ERROR
 
-        if is_existing is not "" and not is_user_existing(conn, is_existing):
+        if is_existing != "" and not is_user_existing(conn, is_existing):
             return True, "User does not exist.", status.NOT_FOUND
-        if is_not_existing is not "" and is_user_existing(conn, is_existing):
+        if is_not_existing != "" and is_user_existing(conn, is_existing):
             return True, "User already exists.", status.CONFLICT
-        if username is not "" and username in FORBIDDEN_NAMES:
+        if username != "" and username in FORBIDDEN_NAMES:
             return True, "Illegal name.", status.CONFLICT
-        if is_admin is not "" and get_rank(conn, is_admin) != "admin":
+        if is_admin != "" and get_rank(conn, is_admin) != "admin":
             return True, "Admin access only.", status.FORBIDDEN
-        if check_password is not "" and not check_password_hash(get_password(conn, username), check_password):
+        if check_password != "" and not check_password_hash(get_password(conn, username), check_password):
             return True, "Wrong username or password.", status.FORBIDDEN
-        if username is not "" and len(username) < 2:
+        if username != "" and len(username) < 2:
             return True, "Name too short.", status.FORBIDDEN
         if check_request is not None and not check_request.is_json:
             return True, "Request must be JSON.", status.UNSUPPORTED_MEDIA_TYPE
