@@ -31,9 +31,9 @@
 
     function onSubmitButtonClick() {
       if (append.checked)
-        output.innerHTML += httpGet(window.location.origin + "/" + numberName.value);
+        output.innerHTML += httpGet(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
       else
-        output.innerHTML = httpGet(window.location.origin + "/" + numberName.value);
+        output.innerHTML = httpGet(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
     }
 
     function onResetButtonClick() {
