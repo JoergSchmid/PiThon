@@ -228,7 +228,7 @@ def create_app(storage_folder="./db/"):
             session["theme"] = "light"
         else:
             session["theme"] = "dark"
-        return redirect(request.args.get("current_page")), status.FOUND
+        return redirect(request.args.get("current_page"))
 
     @app.route('/profile')
     def profile():
@@ -246,7 +246,7 @@ def create_app(storage_folder="./db/"):
             last_page = request.args.get("current_page")
             if last_page is None:
                 return "Logged in as " + session["username"], status.OK
-            return redirect(last_page), status.FOUND
+            return redirect(last_page)
 
         return """<form action='' method='POST'>
                   <input type='text' name='username'><br>
@@ -260,7 +260,7 @@ def create_app(storage_folder="./db/"):
         last_page = request.args.get("current_page")
         if last_page is None:
             return "Logged out.", status.OK
-        return redirect(request.args.get("current_page")), status.FOUND
+        return redirect(request.args.get("current_page"))
 
     @app.route('/register', methods=['GET', 'POST'])
     def register():
@@ -283,7 +283,7 @@ def create_app(storage_folder="./db/"):
                 last_page = request.args.get("current_page")
                 if last_page is None:
                     return fancy_message("Welcome to PiThon, " + username + " :)", status.CREATED)
-                return redirect(request.args.get("current_page")), status.CREATED
+                return redirect(request.args.get("current_page"))
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
         return """<form action='' method='POST'>
@@ -347,7 +347,7 @@ def create_app(storage_folder="./db/"):
             return "You can´t delete admins.", status.FORBIDDEN
 
         delete_user(conn, user)
-        return redirect("/admin"), status.OK
+        return redirect("/admin")
 
     @app.get('/admin/users')
     @auth.login_required
