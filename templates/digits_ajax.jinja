@@ -37,7 +37,11 @@
     }
 
     function onResetButtonClick() {
-      httpGet(window.location.origin + "/" + numberName.value + "/reset");
+      {% if session['username'] == null %}
+        httpReq(window.location.origin + "/" + numberName.value + "/reset");
+      {% else %}
+        httpReq(window.location.origin + "/" + numberName.value + "/" + "{{session['username']}}", method="DELETE")
+      {% endif %}
       output.innerHTML = "";
     }
 
