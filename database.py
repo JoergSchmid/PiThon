@@ -97,7 +97,10 @@ def change_rank(conn, user, rank):
 
 
 def get_all_users_data(conn):
-    return db_execute(conn, "SELECT username, rank FROM users", {}, fetchall=True)
+    users_and_ranks = db_execute(conn, "SELECT username, rank FROM users", {}, fetchall=True)
+    numbers_and_indices = db_execute(conn, """SELECT number, current_index FROM users INNER JOIN number_indices
+                                              ON users.user_id = number_indices.user_id""", {}, fetchall=True)
+    return users_and_ranks, numbers_and_indices
 
 
 def change_password(conn, user, password):
