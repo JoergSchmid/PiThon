@@ -346,10 +346,11 @@ def create_app(storage_folder="./db/"):
             return fancy_message(f"{check[1]}", check[2])
 
         user = request.args.get("user")
-        if check_for_error(is_admin=user)[0]:
+        conn = create_connection(app.config[CONFIG_DB_PATH])
+        if get_rank(conn, user) == "admin":
             return "You can´t delete admins.", status.FORBIDDEN
 
-        delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
+        delete_user(conn, user)
         return redirect("/admin"), status.OK
 
     @app.get('/admin/users')
