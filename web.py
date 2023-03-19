@@ -324,16 +324,12 @@ def create_app(storage_folder="./db/"):
             return fancy_message(f"{check[1]}", check[2])
 
         users_and_indices, numbers_and_indices = get_all_users_data(create_connection(app.config[CONFIG_DB_PATH]))
-        print(users_and_indices)
-        print(numbers_and_indices)
         users, ranks = zip(*users_and_indices)
         numbers, indices = zip(*numbers_and_indices)
         user_list = list(users)
         rank_list = list(ranks)
         number_list = list(numbers)
         index_list = list(indices)
-        print(number_list)
-        print(index_list)
 
         return render_template("admin_panel.jinja", user_list=user_list, rank_list=rank_list, number_list=number_list,
                                index_list=index_list), status.OK
@@ -361,7 +357,6 @@ def create_app(storage_folder="./db/"):
             return check[1], check[2]
 
         conn = create_connection(app.config[CONFIG_DB_PATH])
-
         users = get_all_user_names(conn)
         return users, status.OK
 
