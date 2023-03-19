@@ -334,7 +334,7 @@ def create_app(storage_folder="./db/"):
         return render_template("admin_panel.jinja", user_list=user_list, rank_list=rank_list, number_list=number_list,
                                index_list=index_list), status.OK
 
-    @app.route('/admin/delete')
+    @app.route('/admin/delete', methods=['DELETE', 'POST'])
     def admin_delete():
         username = session.get("username")
         check = check_for_error(is_admin=username)

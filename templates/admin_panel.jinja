@@ -28,7 +28,7 @@
 
     let text = "";
     for(let i in user_list) {
-        text += "<tr><td>" + user_list[i] + "</td><td><a href='/admin/delete?user=" + user_list[i] + "'>delete</a><td>" + rank_list[i] + "</td>";
+        text += "<tr><td>" + user_list[i] + "</td><td><form method='POST' action='/admin/delete?user=" + user_list[i] + "'><input type='submit' value='Delete'></form><td>" + rank_list[i] + "</td>";
         for(let j = 0; j < number_amount; j++) {
             text += "<td>" + index_list[i*number_amount+j] + "</td>";
         }
