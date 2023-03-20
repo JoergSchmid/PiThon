@@ -198,29 +198,9 @@ def create_app(storage_folder="./db/"):
     def tic_tac_toe():
         return render_template("tic_tac_toe.jinja")
 
-    @app.route('/digits_form')
-    def digits_view():
-        return render_template("digits_form.jinja"), status.OK
-
-    @app.route('/digits_ajax')
+    @app.route('/digits')
     def digits_ajax_view():
-        return render_template("digits_ajax.jinja"), status.OK
-
-    @app.route('/digits/form')
-    def digits_form():  # HTML form @ '/digits'
-        number_selection = request.args.get("number_selection")
-        reset = request.args.get("reset")
-        choose_mode = request.args.get("choose_mode")
-        index = request.args.get("index")
-        if reset is not None and reset == "Reset":
-            return redirect(request.host_url + number_selection + "/reset", code=302)
-        if choose_mode == "next_ten":
-            return redirect(request.host_url + number_selection, code=302)
-        if index is None or not index.isnumeric() or int(index) < 0:
-            return "Invalid request.", status.BAD_REQUEST
-        if choose_mode == "one_digit":
-            return redirect(request.host_url + number_selection + "/" + index, code=302)
-        return "Invalid request.", status.BAD_REQUEST
+        return render_template("digits.jinja"), status.OK
 
     @app.get('/digits/<number_name>')
     def download_file(number_name):

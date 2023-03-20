@@ -1,6 +1,6 @@
 {% extends 'base.jinja' %}
 
-{% block title %}AJAX digits{% endblock %}
+{% block title %}Digits{% endblock %}
 
 {% block content %}
 
@@ -8,7 +8,7 @@
   <h2>AJAX digits</h2>
 
   <label for="number_selection">Select your number: </label>
-  <select name="number_selection" id="number_selection" onchange="output.innerHTML=''">
+  <select name="number_selection" id="number_selection" onchange="numberOutput.innerHTML=''">
     <option value="pi" selected>Pi</option>
     <option value="e">e</option>
     <option value="sqrt2">Sqrt2</option>
@@ -18,26 +18,33 @@
   <input type="button" id="oneDigit" name="oneDigit" value="One digit at" onclick="onOneDigitButtonClick()">
   <input type="number" id="indexInput" name="indexInput" value="0" style="width: 100px;">
   <output id="indexOutput" name="indexOutput" style="font-size: larger;"></output><br>
+
+<!-- 10 digits, with progress, and user dependend -->
   <input type="button" id="submit" name="submit" value="Submit" onclick="onSubmitButtonClick()">
   <input type="button" id="showAll" name="showAll" value="Show all progress" onclick="onShowAllButtonClick()">
-  <input type="button" id="clear" name="clear" value="Clear" onclick="output.innerHTML = ''">
+  <input type="button" id="clear" name="clear" value="Clear" onclick="numberOutput.innerHTML = ''">
   <input type="button" id="reset" name="reset" value="Reset" onclick="onResetButtonClick()">
   <input type="checkbox" name="append" id="append" value="append">
-  <label for="append">Append</label>
-
-  <label for="output"></label><br><br>
-  <output id="output" name="output" style="font-size: larger"></output>
+  <label for="append">Append</label><br>
+  <output id="numberOutput" name="numberOutput" style="font-size: larger"></output>
 
   <script>
-    const output = document.getElementById("output");
+    const indexInput = document.getElementById("indexInput");
+    const indexOutput = document.getElementById("indexOutput");
+    const numberOutput = document.getElementById("numberOutput");
     const numberName = document.getElementById("number_selection");
     const append = document.getElementById("append");
 
+    function onOneDigitButtonClick() {
+      if (indexInput.value >= 0)
+        indexOutput.innerHTML = httpReq(window.location.origin + "/" + numberName.value + "/" + indexInput.value);
+    }
+
     function onSubmitButtonClick() {
       if (append.checked)
-        output.innerHTML += httpReq(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
+        numberOutput.innerHTML += httpReq(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
       else
-        output.innerHTML = httpReq(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
+        numberOutput.innerHTML = httpReq(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
     }
 
     function onResetButtonClick() {
@@ -46,11 +53,11 @@
       {% else %}
         httpReq(window.location.origin + "/" + numberName.value + "/" + "{{session['username']}}", method="DELETE")
       {% endif %}
-      output.innerHTML = "";
+      number_output.innerHTML = "";
     }
 
     function onShowAllButtonClick() {
-      output.innerHTML = httpReq(window.location.origin + "/get_all/" + numberName.value);
+      numberOutput.innerHTML = httpReq(window.location.origin + "/get_all/" + numberName.value);
     }
 
     function httpReq(url, method="GET") {
