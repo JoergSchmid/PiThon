@@ -1,6 +1,8 @@
 import http
 from flask import Flask, request, send_file, render_template, redirect, session
 from flask_httpauth import HTTPBasicAuth
+from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash
 from database import *
 from irrational_digits import Pi, E, Sqrt2
@@ -113,9 +115,16 @@ def create_app(storage_folder="./db/"):
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
     app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
     app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
-
-    app.secret_key = "PiThon"
+    app.config["SECRET_KEY"] = "PiThon"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
+    app.config["SESSION_TYPE"] = "sqlalchemy"
+    db = SQLAlchemy(app)
+    app.config["SESSION_SQLALCHEMY"] = db
     auth = HTTPBasicAuth()
+    Session(app)
+
+    with app.app_context():
+        db.create_all()
 
     create_db_tables(app.config[CONFIG_DB_PATH])
 
