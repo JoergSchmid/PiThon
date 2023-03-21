@@ -43,7 +43,27 @@ def db_execute(conn, query, parameters, fetchall=False):
     return data
 
 
-def get_current_index(conn, user, num):
+# <--- Get Functions for tables "users" and "number_indices" --->
+def db_get_all_user_data(conn, user):
+    data = db_execute(conn, "SELECT * FROM users INNER JOIN users USING (user_id) WHERE username =:username",
+                      {'username': user})
+    return data
+
+
+def db_get_all_user_names(conn):
+    data = db_execute(conn, "SELECT username FROM users", {}, fetchall=True)
+    usernames = [i[0] for i in data]  # Returns a normal tuple instead of the list of tuples in data
+    return usernames
+
+
+def db_get_password(conn, user):
+    pw = db_execute(conn, "SELECT password FROM users WHERE username =:username", {'username': user})
+    if pw is None:
+        return None
+    return pw[0]
+
+
+def db_get_current_index(conn, user, num):
     index = db_execute(conn, "SELECT current_index FROM number_indices "
                              "INNER JOIN users ON users.user_id = number_indices.user_id "
                              "WHERE username =:username AND number =:number",
@@ -54,74 +74,61 @@ def get_current_index(conn, user, num):
         return index[0]
 
 
-def raise_current_index(conn, user, increment, num):
-    updated_index = get_current_index(conn, user, num) + increment
-    db_execute(conn, "UPDATE number_indices SET current_index =:index "
-                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)"
-                     "AND number =:number",
-               {'index': updated_index, 'username': user, 'number': num})
-
-
-def reset_current_index(conn, user, num):
-    db_execute(conn, "UPDATE number_indices SET current_index =:index "
-                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)"
-                     "AND number =:number",
-               {'index': 0, 'username': user, 'number': num})
-
-
-def reset_all_current_indices_of_user(conn, user):
-    db_execute(conn, "UPDATE number_indices SET current_index =:index "
-                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)",
-               {'username': user, 'index': 0})
-
-
-def reset_all_current_indices(conn):
-    db_execute(conn, "UPDATE number_indices SET current_index =:index", {'index': 0})
-
-
-def get_password(conn, user):
-    pw = db_execute(conn, "SELECT password FROM users WHERE username =:username", {'username': user})
-    if pw is None:
-        return None
-    return pw[0]
-
-
-def get_rank(conn, user):
+def db_get_rank(conn, user):
     rank = db_execute(conn, "SELECT rank FROM users WHERE username =:username", {'username': user})
     return rank[0] if rank is not None else None
 
 
-def change_rank(conn, user, rank):
-    db_execute(conn, "UPDATE users SET rank =:rank WHERE username =:username",
-               {'rank': rank, 'username': user})
-
-
-def get_all_users_data(conn):
+def db_get_user_data_for_admin_panel(conn):
     users_and_ranks = db_execute(conn, "SELECT username, rank FROM users", {}, fetchall=True)
     numbers_and_indices = db_execute(conn, """SELECT number, current_index FROM users INNER JOIN number_indices
                                               ON users.user_id = number_indices.user_id""", {}, fetchall=True)
     return users_and_ranks, numbers_and_indices
 
 
-def change_password(conn, user, password):
+# <--- (Re)Set Functions for tables "users" and "number_indices" --->
+def db_set_password(conn, user, password):
     db_execute(conn, "UPDATE users SET password =:password WHERE username =:username",
                {'password': generate_password_hash(password), 'username': user})
 
 
-def get_user_data(conn, user):
-    data = db_execute(conn, "SELECT * FROM users INNER JOIN users USING (user_id) WHERE username =:username",
-                      {'username': user})
-    return data
+def db_set_current_index(conn, user, num, index):
+    db_execute(conn, "UPDATE number_indices SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)"
+                     "AND number =:number",
+               {'index': index, 'username': user, 'number': num})
 
 
-def get_all_user_names(conn):
-    data = db_execute(conn, "SELECT username FROM users", {}, fetchall=True)
-    usernames = [i[0] for i in data]  # Returns a normal tuple instead of the list of tuples in data
-    return usernames
+def db_raise_current_index(conn, user, num, increment):
+    updated_index = db_get_current_index(conn, user, num) + increment
+    db_set_current_index(conn, user, num, updated_index)
 
 
-def create_user(conn, user, password, rank="std"):
-    if is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
+def db_reset_current_index(conn, user, num):
+    db_execute(conn, "UPDATE number_indices SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)"
+                     "AND number =:number",
+               {'index': 0, 'username': user, 'number': num})
+
+
+def db_reset_all_current_indices_of_user(conn, user):
+    db_execute(conn, "UPDATE number_indices SET current_index =:index "
+                     "WHERE user_id = (SELECT user_id FROM users WHERE username =:username)",
+               {'username': user, 'index': 0})
+
+
+def db_reset_all_current_indices(conn):
+    db_execute(conn, "UPDATE number_indices SET current_index =:index", {'index': 0})
+
+
+def db_set_rank(conn, user, rank):
+    db_execute(conn, "UPDATE users SET rank =:rank WHERE username =:username",
+               {'rank': rank, 'username': user})
+
+
+# <--- Create and delete users --->
+def db_create_user(conn, user, password, rank="std"):
+    if db_is_user_existing(conn, user) or user in FORBIDDEN_NAMES:
         return None
     db_execute(conn, "INSERT INTO users (username, password, rank) VALUES (:username, :password, :rank)",
                {'username': user, 'password': generate_password_hash(password), 'rank': rank})
@@ -131,7 +138,7 @@ def create_user(conn, user, password, rank="std"):
                {'user_id': user_id[0], 'pi': "pi", 'e': "e", 'sqrt2': "sqrt2"})
 
 
-def delete_user(conn, user):
+def db_delete_user(conn, user):
     user_id = db_execute(conn, "SELECT user_id FROM users WHERE username =:username", {'username': user})
     if user_id is None:
         return
@@ -142,24 +149,25 @@ def delete_user(conn, user):
         db_execute(conn, "DELETE FROM users WHERE username =:username", {'username': user[0]})
 
 
-def is_user_existing(conn, user):
+def db_is_user_existing(conn, user):
     data = db_execute(conn, "SELECT username FROM users WHERE username =:username", {'username': user})
     return data is not None
 
 
-def get_digit_from_digit_index(conn, number, digit_index):
+# <--- Table "number_digits" for saving digits for endpoint "/db/<number>/<index> --->
+def get_digit_from_number_digits(conn, number, digit_index):
     def get_data():
         return db_execute(conn, "SELECT digit FROM number_digits WHERE number =:number AND digit_index =:digit_index",
                           {'number': number.name, 'digit_index': digit_index})
 
     data = get_data()
     if data is None:
-        create_digit_index_up_to(conn, number, digit_index)
+        create_number_digits_index_up_to(conn, number, digit_index)
         data = get_data()
     return str(data[0])
 
 
-def create_digit_index_up_to(conn, number, digit_index):
+def create_number_digits_index_up_to(conn, number, digit_index):
     next_index = int(db_execute(conn, "SELECT COUNT(*) FROM number_digits WHERE number =:number",
                                 {'number': number.name})[0])
     all_digits = number().get_digits_up_to(int(digit_index))
@@ -170,6 +178,7 @@ def create_digit_index_up_to(conn, number, digit_index):
                    {'number': number.name, 'digit_index': i, 'digit': all_digits[i]})
 
 
+# <--- Create all database tables and test users below.  --->
 def create_db_tables(path):
     conn = create_connection(path)
     create_users_table(conn)
@@ -215,7 +224,7 @@ def create_sql_indices(conn):
 def create_test_users(conn):
     # 2 predefined users: "joerg" and "felix". Created freshly for each session.
     # Permanent users are created on the admin endpoint.
-    delete_user(conn, TEST_USER_ADMIN[0])
-    delete_user(conn, TEST_USER_STD[0])
-    create_user(conn, TEST_USER_ADMIN[0], TEST_USER_ADMIN[1], rank="admin")
-    create_user(conn, TEST_USER_STD[0], TEST_USER_STD[1])
+    db_delete_user(conn, TEST_USER_ADMIN[0])
+    db_delete_user(conn, TEST_USER_STD[0])
+    db_create_user(conn, TEST_USER_ADMIN[0], TEST_USER_ADMIN[1], rank="admin")
+    db_create_user(conn, TEST_USER_STD[0], TEST_USER_STD[1])

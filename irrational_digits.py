@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import mpmath
-from database import create_connection, get_current_index, raise_current_index
+from database import create_connection, db_get_current_index, db_raise_current_index
 
 
 # Contains all the Classes for Irrational numbers
@@ -45,11 +45,11 @@ class IrrationalDigits(ABC):
 
     def get_next_ten_digits_for_user(self, user, db_path):
         conn = create_connection(db_path)
-        current_index = get_current_index(conn, user, self.name)
+        current_index = db_get_current_index(conn, user, self.name)
         if current_index < 0:
             return "error: user not found"
         last_ten = self.get_next_ten_digits_from_index(current_index)
-        raise_current_index(conn, user, 10, self.name)
+        db_raise_current_index(conn, user, self.name, 10)
         return last_ten
 
     @staticmethod

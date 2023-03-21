@@ -3,7 +3,7 @@ import http
 import pytest
 from werkzeug.security import check_password_hash
 
-from database import TEST_USER_STD, TEST_USER_ADMIN, get_password, create_connection
+from database import TEST_USER_STD, TEST_USER_ADMIN, db_get_password, create_connection
 from test_irrational_number_endpoints import PI_FIRST_10, E_FIRST_10, SQRT2_FIRST_10
 from web import CONFIG_DB_PATH
 
@@ -47,7 +47,7 @@ def test_only_admin_can_patch_new_password(app, client_with_test_user):
                         json={"password": "wrong_password"}).status_code == status.FORBIDDEN
     assert client.patch("/admin/users/test_user", auth=TEST_USER_ADMIN,
                         json={"password": "new_test_password"}).status_code == status.CREATED
-    assert check_password_hash(get_password(create_connection(app.config[CONFIG_DB_PATH]), "test_user"),
+    assert check_password_hash(db_get_password(create_connection(app.config[CONFIG_DB_PATH]), "test_user"),
                                "new_test_password")
 
 

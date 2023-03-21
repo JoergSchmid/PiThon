@@ -28,7 +28,7 @@ def create_standard_get_view(number_class, txt_path):
 
 def create_get_database_view(number_class, db_path):
     def get_view(digit_index):
-        return get_digit_from_digit_index(create_connection(db_path), number_class, digit_index), status.OK
+        return get_digit_from_number_digits(create_connection(db_path), number_class, digit_index), status.OK
 
     return get_view
 
@@ -47,7 +47,7 @@ def create_index_or_user_view(number_class, db_path):
 
 def create_delete_user_index_view(number_class, db_path):
     def delete_user_index_view(user):
-        reset_current_index(create_connection(db_path), user, number_class.name)
+        db_reset_current_index(create_connection(db_path), user, number_class.name)
         return {}, status.OK
 
     return delete_user_index_view
@@ -55,7 +55,7 @@ def create_delete_user_index_view(number_class, db_path):
 
 def create_delete_all_user_indices_view(db_path):
     def delete_all_user_indices_view(user):
-        reset_all_current_indices_of_user(create_connection(db_path), user)
+        db_reset_all_current_indices_of_user(create_connection(db_path), user)
         return {}, status.OK
 
     return delete_all_user_indices_view
@@ -164,15 +164,15 @@ def create_app(storage_folder="./db/"):
             print("Internal error. Requested password check without providing a username to check_for_error().")
             return True, "Internal error.", status.INTERNAL_SERVER_ERROR
 
-        if is_existing != "" and not is_user_existing(conn, is_existing):
+        if is_existing != "" and not db_is_user_existing(conn, is_existing):
             return True, "User does not exist.", status.NOT_FOUND
-        if is_not_existing != "" and is_user_existing(conn, is_existing):
+        if is_not_existing != "" and db_is_user_existing(conn, is_existing):
             return True, "User already exists.", status.CONFLICT
         if username != "" and username in FORBIDDEN_NAMES:
             return True, "Illegal name.", status.CONFLICT
-        if is_admin != "" and get_rank(conn, is_admin) != "admin":
+        if is_admin != "" and db_get_rank(conn, is_admin) != "admin":
             return True, "Admin access only.", status.FORBIDDEN
-        if check_password != "" and not check_password_hash(get_password(conn, username), check_password):
+        if check_password != "" and not check_password_hash(db_get_password(conn, username), check_password):
             return True, "Wrong username or password.", status.FORBIDDEN
         if username != "" and len(username) < 2:
             return True, "Name too short.", status.FORBIDDEN
@@ -191,7 +191,7 @@ def create_app(storage_folder="./db/"):
 
     @auth.verify_password
     def verify_password(username, password):
-        pw_hash = get_password(create_connection(app.config[CONFIG_DB_PATH]), username)
+        pw_hash = db_get_password(create_connection(app.config[CONFIG_DB_PATH]), username)
         return pw_hash is not None and check_password_hash(pw_hash, password)
 
     @app.route('/tic_tac_toe')
@@ -267,7 +267,7 @@ def create_app(storage_folder="./db/"):
             conn = create_connection(app.config[CONFIG_DB_PATH])
 
             try:
-                create_user(conn, username, password)
+                db_create_user(conn, username, password)
                 session["username"] = username
                 last_page = request.args.get("current_page")
                 if last_page is None:
@@ -294,7 +294,7 @@ def create_app(storage_folder="./db/"):
                 if check[0]:
                     return check[1], check[2]
 
-                delete_user(conn, username)
+                db_delete_user(conn, username)
                 session.pop('username', None)
                 return fancy_message(f"{username} deleted :(", status.OK)
             except (KeyError, ValueError):
@@ -312,7 +312,7 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return fancy_message(f"{check[1]}", check[2])
 
-        users_and_indices, numbers_and_indices = get_all_users_data(create_connection(app.config[CONFIG_DB_PATH]))
+        users_and_indices, numbers_and_indices = db_get_user_data_for_admin_panel(create_connection(app.config[CONFIG_DB_PATH]))
         users, ranks = zip(*users_and_indices)
         numbers, indices = zip(*numbers_and_indices)
         user_list = list(users)
@@ -332,10 +332,10 @@ def create_app(storage_folder="./db/"):
 
         user = request.args.get("user")
         conn = create_connection(app.config[CONFIG_DB_PATH])
-        if get_rank(conn, user) == "admin":
+        if db_get_rank(conn, user) == "admin":
             return "You can´t delete admins.", status.FORBIDDEN
 
-        delete_user(conn, user)
+        db_delete_user(conn, user)
         return redirect("/admin")
 
     @app.get('/admin/users')
@@ -346,7 +346,7 @@ def create_app(storage_folder="./db/"):
             return check[1], check[2]
 
         conn = create_connection(app.config[CONFIG_DB_PATH])
-        users = get_all_user_names(conn)
+        users = db_get_all_user_names(conn)
         return users, status.OK
 
     @app.post('/admin/users')
@@ -364,7 +364,7 @@ def create_app(storage_folder="./db/"):
             if check[0]:
                 return check[1], check[2]
 
-            create_user(conn, data["username"], data["password"])
+            db_create_user(conn, data["username"], data["password"])
             return data["username"], status.CREATED
         except (KeyError, ValueError):
             return "Invalid Request", status.BAD_REQUEST
@@ -380,7 +380,7 @@ def create_app(storage_folder="./db/"):
         conn = create_connection(app.config[CONFIG_DB_PATH])
 
         try:
-            change_password(conn, user, data["password"])
+            db_set_password(conn, user, data["password"])
             return {"username": user, "password": "***"}, status.CREATED
         except (KeyError, ValueError):
             return "Invalid Request", status.BAD_REQUEST
@@ -392,7 +392,7 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return check[1], check[2]
 
-        reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
+        db_reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
         return "All indices are reset.", status.OK
 
     @app.delete('/admin/users/<user>')
@@ -402,7 +402,7 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return check[1], check[2]
 
-        delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
+        db_delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
         return {}, status.OK
 
     @app.after_request
