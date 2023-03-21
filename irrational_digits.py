@@ -43,6 +43,14 @@ class IrrationalDigits(ABC):
             return i_num[-12:]
         return i_num[-10:]
 
+    def get_n_digits_from_index(self, index, amount):
+        if index < 0:
+            index = 0
+        i_num = self.get_number_with_accuracy(index + amount)
+        if index == 0:
+            return self.get_digits_up_to(amount)
+        return i_num[-amount-1:-1]
+
     def get_next_ten_digits_for_user(self, user, db_path):
         conn = create_connection(db_path)
         current_index = db_get_current_index(conn, user, self.name)
@@ -50,6 +58,15 @@ class IrrationalDigits(ABC):
             return "error: user not found"
         last_ten = self.get_next_ten_digits_from_index(current_index)
         db_raise_current_index(conn, user, self.name, 10)
+        return last_ten
+
+    def get_next_n_digits_for_user(self, user, amount, db_path):
+        conn = create_connection(db_path)
+        current_index = db_get_current_index(conn, user, self.name)
+        if current_index < 0:
+            return "error: user not found"
+        last_ten = self.get_n_digits_from_index(current_index, amount)
+        db_raise_current_index(conn, user, self.name, amount)
         return last_ten
 
     @staticmethod
