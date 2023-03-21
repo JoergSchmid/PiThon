@@ -127,6 +127,7 @@ def create_app(storage_folder="./db/"):
         db.create_all()
 
     create_db_tables(app.config[CONFIG_DB_PATH])
+    conn = create_connection(app.config[CONFIG_DB_PATH])
 
     number_configs = [(Pi, app.config[CONFIG_PI_TXT_PATH]),
                       (E, app.config[CONFIG_E_TXT_PATH]),
@@ -157,8 +158,6 @@ def create_app(storage_folder="./db/"):
                          endpoint=f"/{number.name}_get_all")
 
     def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None):
-        conn = create_connection(app.config[CONFIG_DB_PATH])
-
         username = is_existing if is_existing != "" else is_admin
         if check_password != "" and username == "":
             print("Internal error. Requested password check without providing a username to check_for_error().")
@@ -264,8 +263,6 @@ def create_app(storage_folder="./db/"):
             if check[0]:
                 return check[1], check[2]
 
-            conn = create_connection(app.config[CONFIG_DB_PATH])
-
             try:
                 db_create_user(conn, username, password)
                 session["username"] = username
@@ -287,7 +284,6 @@ def create_app(storage_folder="./db/"):
         if request.method == "POST":
             username = session.get("username")
             password = request.form["password"]
-            conn = create_connection(app.config[CONFIG_DB_PATH])
 
             try:
                 check = check_for_error(is_existing=username, check_password=password)
@@ -331,7 +327,6 @@ def create_app(storage_folder="./db/"):
             return fancy_message(f"{check[1]}", check[2])
 
         user = request.args.get("user")
-        conn = create_connection(app.config[CONFIG_DB_PATH])
         if db_get_rank(conn, user) == "admin":
             return "You can´t delete admins.", status.FORBIDDEN
 
@@ -345,7 +340,6 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return check[1], check[2]
 
-        conn = create_connection(app.config[CONFIG_DB_PATH])
         users = db_get_all_user_names(conn)
         return users, status.OK
 
@@ -357,7 +351,6 @@ def create_app(storage_folder="./db/"):
             return check[1], check[2]
 
         data = request.get_json()
-        conn = create_connection(app.config[CONFIG_DB_PATH])
 
         try:
             check = check_for_error(is_not_existing=data["username"])
@@ -377,7 +370,6 @@ def create_app(storage_folder="./db/"):
             return check[1], check[2]
 
         data = request.get_json()
-        conn = create_connection(app.config[CONFIG_DB_PATH])
 
         try:
             db_set_password(conn, user, data["password"])
