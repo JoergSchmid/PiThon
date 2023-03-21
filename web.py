@@ -308,7 +308,7 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return fancy_message(f"{check[1]}", check[2])
 
-        users_and_indices, numbers_and_indices = db_get_user_data_for_admin_panel(create_connection(app.config[CONFIG_DB_PATH]))
+        users_and_indices, numbers_and_indices = db_get_user_data_for_admin_panel(conn)
         users, ranks = zip(*users_and_indices)
         numbers, indices = zip(*numbers_and_indices)
         user_list = list(users)
@@ -384,7 +384,7 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return check[1], check[2]
 
-        db_reset_all_current_indices(create_connection(app.config[CONFIG_DB_PATH]))
+        db_reset_all_current_indices(conn)
         return "All indices are reset.", status.OK
 
     @app.delete('/admin/users/<user>')
@@ -394,7 +394,7 @@ def create_app(storage_folder="./db/"):
         if check[0]:
             return check[1], check[2]
 
-        db_delete_user(create_connection(app.config[CONFIG_DB_PATH]), user)
+        db_delete_user(conn, user)
         return {}, status.OK
 
     @app.after_request
