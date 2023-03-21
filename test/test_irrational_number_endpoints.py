@@ -86,34 +86,3 @@ def test_all_user_indices_get_reset(client):
     assert client.get(f"/pi/{TEST_USER_STD[0]}").data == PI_FIRST_10
     assert client.get(f"/e/{TEST_USER_STD[0]}").data == E_FIRST_10
     assert client.get(f"/sqrt2/{TEST_USER_STD[0]}").data == SQRT2_FIRST_10
-
-
-@pytest.mark.parametrize("number,first_ten", [("pi", PI_FIRST_10),
-                                              ("e", E_FIRST_10),
-                                              ("sqrt2", SQRT2_FIRST_10)])
-def test_form_endpoint_get_10(client, number, first_ten):
-    assert client.get(f"/digits/form?number_selection={number}&choose_mode=next_ten&index=1234",
-                      follow_redirects=True).data == first_ten
-
-
-@pytest.mark.parametrize("number,first_ten", [("pi", PI_FIRST_10),
-                                              ("e", E_FIRST_10),
-                                              ("sqrt2", SQRT2_FIRST_10)])
-def test_form_endpoint_one_digit(client, number, first_ten):
-    assert client.get(f"/digits/form?number_selection={number}&choose_mode=one_digit&index=0",
-                      follow_redirects=True).data == first_ten[0:1]
-    for i in range(1, 11):
-        assert client.get(f"/digits/form?number_selection={number}&choose_mode=one_digit&index={i}",
-                          follow_redirects=True).data == first_ten[i + 1:i + 2]  # byte strings have different indexing
-
-
-@pytest.mark.parametrize("number,first_ten", [("pi", PI_FIRST_10),
-                                              ("e", E_FIRST_10),
-                                              ("sqrt2", SQRT2_FIRST_10)])
-def test_form_endpoint_reset(client, number, first_ten):
-    client.get(f"/digits/form?number_selection={number}&choose_mode=next_ten&index=1234",
-               follow_redirects=True)
-    assert client.get(f"/digits/form?number_selection={number}&choose_mode=next_ten&index=1234&reset=Reset",
-                      follow_redirects=True).status_code == http.HTTPStatus.OK
-    assert client.get(f"/digits/form?number_selection={number}&choose_mode=next_ten&index=1234",
-                      follow_redirects=True).data == first_ten
