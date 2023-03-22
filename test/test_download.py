@@ -2,7 +2,7 @@ import http
 
 import pytest
 
-from test_irrational_number_endpoints import PI_FIRST_10, PI_NEXT_10, E_NEXT_10, E_FIRST_10, SQRT2_FIRST_10, \
+from test_api import PI_FIRST_10, PI_NEXT_10, E_NEXT_10, E_FIRST_10, SQRT2_FIRST_10, \
     SQRT2_NEXT_10
 
 

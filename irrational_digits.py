@@ -35,6 +35,14 @@ class IrrationalDigits(ABC):
             f.write(next_digits)
             return next_digits
 
+    def get_next_n_digits(self, amount, txt_path):
+        with open(txt_path, "a+") as f:
+            f.seek(0)
+            current_number_of_digits = len(f.readline()) - 2
+            next_digits = self.get_n_digits_from_index(current_number_of_digits, amount)
+            f.write(next_digits)
+            return next_digits
+
     def get_next_ten_digits_from_index(self, index):
         if index < 0:
             index = 0

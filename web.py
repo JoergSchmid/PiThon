@@ -184,7 +184,7 @@ def create_app(storage_folder="./db/"):
         return f"""<p>{text}</p><br>
                    <a href=/{page}>{link_message}</a>""", http_status
 
-    @app.route('/api')
+    @app.route('/api', methods=['GET', 'POST', 'DELETE'])
     def api():
         user = request.authorization.username if request.authorization is not None else None
         number_ = request.args.get("number")
@@ -224,16 +224,13 @@ def create_app(storage_folder="./db/"):
         index = int(index_) if index_ is not None else None
         amount = int(amount_) if amount_ is not None else None
 
-        if number_ is None:
-            return render_template("api_help.jinja", message="No number given. NYI. Sorry."), status.OK
-
         if request.method == "GET":
             # <--- No user given --->
             if user is None and number_ is not None and index is None and amount is None:
                 return num.get_all_from_file(path), status.OK
 
             if user is None and number_ is not None and index is None:
-                return num.get_digits_up_to(amount), status.OK
+                return num.get_next_n_digits(amount, path), status.OK
 
             if user is None and number_ is not None and amount is None:
                 return num.get_digit_at_index(index), status.OK
@@ -263,7 +260,7 @@ def create_app(storage_folder="./db/"):
                                        message="User, index & amount alone do not mix (yet)."), status.BAD_REQUEST
 
         if request.method == "POST":
-            if user is None or number_ is None or index is None or amount is None:
+            if user is None and number_ is None and index is None and amount is None:
                 if data["username"] is None or data["password"] is None:
                     return render_template("api_help.jinja", message="Insufficient json data."), status.BAD_REQUEST
 
@@ -277,20 +274,21 @@ def create_app(storage_folder="./db/"):
                 db_set_current_index(conn, user, number_, index)
                 return f"Index successfully set to {index}.", status.OK
 
-            return render_template("api_help.jinja", message="No known operation yet."), status.BAD_REQUEST
-
         if request.method == "DELETE":
-            if user is None or index is not None or amount is not None:
-                return render_template("api_help.jinja", message="No known operation yet."), status.BAD_REQUEST
-
-            if number_ is None:
+            if user is not None and number_ is None and index is None and amount is None:
                 if data["confirm_deletion"]:
                     db_delete_user(conn, user)
                     return f"{user} successfully deleted.", status.OK
                 return render_template("api_help.jinja", message="{'confirm_deletion'} needed."), status.BAD_REQUEST
 
-            db_reset_current_index(conn, user, number_)
-            return f"{number_} reset successful.", status.OK
+            if user is not None and number_ is not None and index is None and amount is None:
+                db_reset_current_index(conn, user, number_)
+                return f"{number_} reset successful.", status.OK
+
+            if user is None and number_ is not None and index is None and amount is None:
+                with open(path, "w") as f:
+                    f.truncate()
+                return f"{number_} successfully reset.", status.OK
 
         return render_template("api_help.jinja", message="No valid input found."), status.BAD_REQUEST
 

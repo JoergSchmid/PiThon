@@ -4,7 +4,7 @@ import pytest
 from werkzeug.security import check_password_hash
 
 from database import TEST_USER_STD, TEST_USER_ADMIN, db_get_password, create_connection
-from test_irrational_number_endpoints import PI_FIRST_10, E_FIRST_10, SQRT2_FIRST_10
+from test_api import PI_FIRST_10, E_FIRST_10, SQRT2_FIRST_10
 from web import CONFIG_DB_PATH
 
 status = http.HTTPStatus
