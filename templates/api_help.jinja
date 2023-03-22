@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PiThon api</title>
+    <link rel="stylesheet" href="../static/css/main.css">
+    <link rel="icon" type="image" href="../static/images/favicon.ico">
+</head>
+
+<body>
+<p>{{message}}</p>
+<h1>PiThon api guide</h1>
+<h4>You can use this api using Basic Auth and url-parameters. These parameters are:</h4><br>
+<ul>
+    <li>number: choose your number: must be "pi", "e" or "sqrt2"</li>
+    <li>index: select a specific digit of your number</li>
+    <li>amount: select the number of digits you want</li>
+</ul><br>
+<h4>Using these parameters in various combinations will result in different responses. Here are some examples:</h4>
+<ul>
+    <li>Basic Auth currently only works in combination with "number", i.e. "/api?number=pi". Progress will be saved for the given user.</li>
+    <li>Without Auth only providing "number" will show you the current progress of that number.</li>
+    <li>"index" shows you the digit of the the chosen "number". "amount" will show the given number from that "index". No index given means from start.</li>
+    <li>"/api?number=pi&amount=3" -> <b>3.141</b></li>
+    <li>"/api?number=e&index=2&amount=4" -> 2.7 <b>1828</b></li>
+</ul>
+</body>
