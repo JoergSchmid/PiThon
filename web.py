@@ -17,91 +17,11 @@ CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
 
 
-def create_standard_get_view(number_class, txt_path):
-    number_instance = number_class()
-
-    def get_view():
-        return number_instance.get_next_ten_digits(txt_path), status.OK
-
-    return get_view
-
-
 def create_get_database_view(number_class, db_path):
     def get_view(digit_index):
         return get_digit_from_number_digits(create_connection(db_path), number_class, digit_index), status.OK
 
     return get_view
-
-
-def create_index_or_user_view(number_class, db_path):
-    number_instance = number_class()
-
-    def index_or_user_view(data):
-        if data.isnumeric():
-            return number_instance.get_digit_at_index(int(data)), status.OK
-
-        return number_instance.get_next_ten_digits_for_user(data, db_path), status.OK
-
-    return index_or_user_view
-
-
-def create_delete_user_index_view(number_class, db_path):
-    def delete_user_index_view(user):
-        db_reset_current_index(create_connection(db_path), user, number_class.name)
-        return {}, status.OK
-
-    return delete_user_index_view
-
-
-def create_delete_all_user_indices_view(db_path):
-    def delete_all_user_indices_view(user):
-        db_reset_all_current_indices_of_user(create_connection(db_path), user)
-        return {}, status.OK
-
-    return delete_all_user_indices_view
-
-
-def create_number_reset_view(txt_path):
-    def number_reset_view():
-        with open(txt_path, "w") as f:
-            f.truncate()
-        return "reset", status.OK
-
-    return number_reset_view
-
-
-def create_get_view(number_class, txt_path, db_path):
-    number_instance = number_class()
-
-    def get_view(data):
-        try:
-            if data.isnumeric():
-                return number_class.get_digit_at_index(number_instance, int(data)), status.OK
-            if data == "getfile":
-                return number_class.get_all_from_file(txt_path), status.OK
-            if "upto" in data and data.split("upto")[1].isnumeric():
-                return number_class.get_digits_up_to(number_instance, int(data.split("upto")[1])), status.OK
-            if data is not None:
-                return number_class.get_next_ten_digits_for_user(number_instance, data, db_path), status.OK
-        except ValueError:
-            return {"error": "invalid value"}, status.BAD_REQUEST
-        return {"error": "No known request sent"}, status.BAD_REQUEST
-
-    return get_view
-
-
-def create_get_first_ten_view(number_class):
-    def get_first_ten_view():
-        return number_class().get_first_ten_digits_without_point(), status.OK
-
-    return get_first_ten_view
-
-
-def create_get_all_view(number_class, txt_path):
-    def get_all_view():
-        return number_class().get_all_from_file(txt_path), status.OK
-
-    return get_all_view
 
 
 def create_app(storage_folder="./db/"):
@@ -133,29 +53,9 @@ def create_app(storage_folder="./db/"):
                       (E, app.config[CONFIG_E_TXT_PATH]),
                       (Sqrt2, app.config[CONFIG_SQRT2_TXT_PATH])]
     for number, txt_path in number_configs:
-        app.add_url_rule(f"/{number.name}", view_func=create_standard_get_view(number, txt_path),
-                         endpoint=f"{number.name}_standard_get")
-        app.add_url_rule(f"/{number.name}/<data>",
-                         view_func=create_index_or_user_view(number, app.config[CONFIG_DB_PATH]),
-                         endpoint=f"{number.name}_index_or_user")
-        app.add_url_rule(f"/{number.name}/<user>",
-                         view_func=create_delete_user_index_view(number, app.config[CONFIG_DB_PATH]),
-                         methods=["DELETE"], endpoint=f"{number.name}_delete_user_index")
-        app.add_url_rule(f"/reset/<user>",
-                         view_func=create_delete_all_user_indices_view(app.config[CONFIG_DB_PATH]),
-                         methods=["DELETE"], endpoint=f"{number.name}_delete_all_user_indices")
-        app.add_url_rule(f"/{number.name}/reset", view_func=create_number_reset_view(txt_path),
-                         endpoint=f"{number.name}_reset")
-        app.add_url_rule(f"/{number.name}/get/<data>",
-                         view_func=create_get_view(number, txt_path, app.config[CONFIG_DB_PATH]),
-                         endpoint=f"{number.name}_get")
         app.add_url_rule(f"/db/{number.name}/<digit_index>",
                          view_func=create_get_database_view(number, app.config[CONFIG_DB_PATH]),
                          endpoint=f"{number.name}_get_database")
-        app.add_url_rule(f"/{number.name}/get_first_ten", view_func=create_get_first_ten_view(number),
-                         endpoint=f"/{number.name}_get_first_ten")
-        app.add_url_rule(f"/get_all/{number.name}", view_func=create_get_all_view(number, txt_path),
-                         endpoint=f"/{number.name}_get_all")
 
     def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None):
         username = is_existing if is_existing != "" else is_admin
