@@ -212,8 +212,9 @@ def create_app(storage_folder="./db/"):
 
     @app.get('/digits/<number_name>')
     def download_file(number_name):
-        if number_name not in CONFIG_TXT_PATH_MAPPING.keys():
-            return "Unknown number", status.BAD_REQUEST
+        check = check_for_error(is_valid_number_name=number_name)
+        if check[0]:
+            return fancy_message(f"{check[1]}", check[2])
         path = app.config[CONFIG_TXT_PATH_MAPPING[number_name]]
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
