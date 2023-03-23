@@ -15,13 +15,6 @@ CONFIG_E_TXT_PATH = "E_TXT_PATH"
 CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 
 CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
-
-
-def create_get_database_view(number_class, db_path):
-    def get_view(digit_index):
-        return get_digit_from_number_digits(create_connection(db_path), number_class, digit_index), status.OK
-
-    return get_view
 CLASS_MAPPING = {Pi.name: Pi, E.name: E, Sqrt2.name: Sqrt2}
 
 
@@ -53,12 +46,9 @@ def create_app(storage_folder="./db/"):
     number_configs = [(Pi, app.config[CONFIG_PI_TXT_PATH]),
                       (E, app.config[CONFIG_E_TXT_PATH]),
                       (Sqrt2, app.config[CONFIG_SQRT2_TXT_PATH])]
-    for number, txt_path in number_configs:
-        app.add_url_rule(f"/db/{number.name}/<digit_index>",
-                         view_func=create_get_database_view(number, app.config[CONFIG_DB_PATH]),
-                         endpoint=f"{number.name}_get_database")
 
-    def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None):
+    def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None,
+                        is_valid_number_name=""):
         username = is_existing if is_existing != "" else is_admin
         if check_password != "" and username == "":
             print("Internal error. Requested password check without providing a username to check_for_error().")
@@ -78,6 +68,8 @@ def create_app(storage_folder="./db/"):
             return True, "Name too short.", status.FORBIDDEN
         if check_request is not None and not check_request.is_json:
             return True, "Request must be JSON.", status.UNSUPPORTED_MEDIA_TYPE
+        if is_valid_number_name != "" and is_valid_number_name not in CLASS_MAPPING.keys():
+            return True, "Unknown number.", status.NOT_FOUND
 
         return False, None, None
 
@@ -310,6 +302,13 @@ def create_app(storage_folder="./db/"):
                     <input type='password' name='password'><br>
                     <input type='submit' value='Delete'>
                     </form>""", status.OK
+
+    @app.route('/db/<num>/<int:index>')
+    def number_digits_view(num, index):
+        check = check_for_error(is_valid_number_name=num)
+        if check[0]:
+            return fancy_message(f"{check[1]}", check[2])
+        return get_digit_from_number_digits(conn, CLASS_MAPPING[num], index), status.OK
 
     @app.route('/admin')
     def admin():
