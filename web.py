@@ -22,6 +22,7 @@ def create_get_database_view(number_class, db_path):
         return get_digit_from_number_digits(create_connection(db_path), number_class, digit_index), status.OK
 
     return get_view
+CLASS_MAPPING = {Pi.name: Pi, E.name: E, Sqrt2.name: Sqrt2}
 
 
 def create_app(storage_folder="./db/"):
