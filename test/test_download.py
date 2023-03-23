@@ -25,4 +25,4 @@ def test_download_of_empty_file_fails(client, number):
 @pytest.mark.parametrize("number", ["cat", "a", "four"])
 def test_download_of_unknown_numbers_fails(client, number):
     download = client.get(f"/digits/{number}")
-    assert download.status_code == http.HTTPStatus.BAD_REQUEST
+    assert download.status_code == http.HTTPStatus.NOT_FOUND
