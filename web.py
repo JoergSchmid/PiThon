@@ -1,4 +1,5 @@
 import http
+from collections import namedtuple
 from flask import Flask, request, send_file, render_template, redirect, session
 from flask_httpauth import HTTPBasicAuth
 from flask_session import Session
@@ -16,6 +17,8 @@ CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 
 CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
 CLASS_MAPPING = {Pi.name: Pi, E.name: E, Sqrt2.name: Sqrt2}
+
+Err = namedtuple("Err", ["is_err", "err_message", "err_status"], defaults=None)
 
 
 def create_app(storage_folder="./db/"):
@@ -47,31 +50,39 @@ def create_app(storage_folder="./db/"):
                       (E, app.config[CONFIG_E_TXT_PATH]),
                       (Sqrt2, app.config[CONFIG_SQRT2_TXT_PATH])]
 
-    def check_for_error(is_existing="", is_not_existing="", is_admin="", check_password="", check_request=None,
-                        is_valid_number_name=""):
-        username = is_existing if is_existing != "" else is_admin
-        if check_password != "" and username == "":
-            print("Internal error. Requested password check without providing a username to check_for_error().")
-            return True, "Internal error.", status.INTERNAL_SERVER_ERROR
+    def check_user_exists(user) -> Err:
+        if not db_is_user_existing(conn, user):
+            return Err(True, "User does not exist.", status.NOT_FOUND)
+        return Err(False, None, None)
 
-        if is_existing != "" and not db_is_user_existing(conn, is_existing):
-            return True, "User does not exist.", status.NOT_FOUND
-        if is_not_existing != "" and db_is_user_existing(conn, is_existing):
-            return True, "User already exists.", status.CONFLICT
-        if username != "" and username in FORBIDDEN_NAMES:
-            return True, "Illegal name.", status.CONFLICT
-        if is_admin != "" and db_get_rank(conn, is_admin) != "admin":
-            return True, "Admin access only.", status.FORBIDDEN
-        if check_password != "" and not check_password_hash(db_get_password(conn, username), check_password):
-            return True, "Wrong username or password.", status.FORBIDDEN
-        if username != "" and len(username) < 2:
-            return True, "Name too short.", status.FORBIDDEN
-        if check_request is not None and not check_request.is_json:
-            return True, "Request must be JSON.", status.UNSUPPORTED_MEDIA_TYPE
-        if is_valid_number_name != "" and is_valid_number_name not in CLASS_MAPPING.keys():
-            return True, "Unknown number.", status.NOT_FOUND
+    def check_username_legal(user) -> Err:
+        if db_is_user_existing(conn, user):
+            return Err(True, "User already exists.", status.CONFLICT)
+        if len(user) < 2:
+            return Err(True, "Name too short.", status.FORBIDDEN)
+        if user in FORBIDDEN_NAMES:
+            return Err(True, "Illegal name", status.FORBIDDEN)
+        return Err(False, None, None)
 
-        return False, None, None
+    def check_user_is_admin(user) -> Err:
+        if db_get_rank(conn, user) != "admin":
+            return Err(True, "Admin access only.", status.FORBIDDEN)
+        return Err(False, None, None)
+
+    def check_password(user, password) -> Err:
+        if not check_password_hash(db_get_password(conn, user), password):
+            return Err(True, "Wrong username or password.", status.FORBIDDEN)
+        return Err(False, None, None)
+
+    def check_request_is_json(data) -> Err:
+        if not data.is_json:
+            return Err(True, "Request must be JSON.", status.UNSUPPORTED_MEDIA_TYPE)
+        return Err(False, None, None)
+
+    def check_is_known_number(number):
+        if number not in CLASS_MAPPING.keys():
+            return Err(True, "Unknown number.", status.NOT_FOUND)
+        return Err(False, None, None)
 
     def create_text_with_link_response(text, http_status, link_message="Continue", page=""):
         return f"""<p>{text}</p><br>
@@ -204,9 +215,9 @@ def create_app(storage_folder="./db/"):
 
     @app.get('/digits/<number_name>')
     def download_file(number_name):
-        check = check_for_error(is_valid_number_name=number_name)
-        if check[0]:
-            return create_text_with_link_response(f"{check[1]}", check[2])
+        check = check_is_known_number(number_name)
+        if check.is_err:
+            return create_text_with_link_response(check.err_message, check.err_status)
         path = app.config[CONFIG_TXT_PATH_MAPPING[number_name]]
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
@@ -253,9 +264,9 @@ def create_app(storage_folder="./db/"):
         if request.form["confirm_password"] != password:
             return "Password confirmation failed.", status.FORBIDDEN
 
-        check = check_for_error(is_not_existing=username)
-        if check[0]:
-            return check[1], check[2]
+        check = check_username_legal(username)
+        if check.is_err:
+            return check.err_message, check.err_status
 
         try:
             db_create_user(conn, username, password)
@@ -273,9 +284,12 @@ def create_app(storage_folder="./db/"):
         password = request.form["password"]
 
         try:
-            check = check_for_error(is_existing=username, check_password=password)
-            if check[0]:
-                return check[1], check[2]
+            check = check_user_exists(username)
+            if check.is_err:
+                return check.err_message, check.err_status
+            check = check_password(username, password)
+            if check.is_err:
+                return check.err_message, check.err_status
 
             db_delete_user(conn, username)
             session.pop('username', None)
@@ -285,17 +299,17 @@ def create_app(storage_folder="./db/"):
 
     @app.route('/db/<num>/<int:index>')
     def number_digits_view(num, index):
-        check = check_for_error(is_valid_number_name=num)
-        if check[0]:
-            return create_text_with_link_response(f"{check[1]}", check[2])
+        check = check_is_known_number(num)
+        if check.is_err:
+            return create_text_with_link_response(check.err_message, check.err_message)
         return get_digit_from_number_digits(conn, CLASS_MAPPING[num], index), status.OK
 
     @app.route('/admin')
     def admin():
         username = session.get("username")
-        check = check_for_error(is_admin=username)
-        if check[0]:
-            return create_text_with_link_response(f"{check[1]}", check[2])
+        check = check_user_is_admin(username)
+        if check.is_err:
+            return create_text_with_link_response(check.err_message, check.err_status)
 
         users_and_indices, numbers_and_indices = db_get_user_data_for_admin_panel(conn)
         users, ranks = zip(*users_and_indices)
@@ -311,9 +325,9 @@ def create_app(storage_folder="./db/"):
     @app.route('/admin/delete', methods=['DELETE', 'POST'])
     def admin_delete():
         username = session.get("username")
-        check = check_for_error(is_admin=username)
-        if check[0]:
-            return create_text_with_link_response(f"{check[1]}", check[2])
+        check = check_user_is_admin(username)
+        if check.is_err:
+            return create_text_with_link_response(check.err_message, check.err_status)
 
         user = request.args.get("user")
         if db_get_rank(conn, user) == "admin":
@@ -325,9 +339,9 @@ def create_app(storage_folder="./db/"):
     @app.get('/admin/users')
     @auth.login_required
     def admin_get_all_users():
-        check = check_for_error(is_admin=auth.current_user())
-        if check[0]:
-            return check[1], check[2]
+        check = check_user_is_admin(auth.current_user())
+        if check.is_err:
+            return check.err_message, check.err_status
 
         users = db_get_all_user_names(conn)
         return users, status.OK
@@ -335,17 +349,17 @@ def create_app(storage_folder="./db/"):
     @app.post('/admin/users')
     @auth.login_required
     def admin_add_user():
-        check = check_for_error(is_admin=auth.current_user(), check_request=request)
-        if check[0]:
-            return check[1], check[2]
-
+        check = check_user_is_admin(auth.current_user())
+        if check.is_err:
+            return check.err_message, check.err_status
+        check = check_request_is_json(request)
+        if check.is_err:
+            return check.err_message, check.err_status
         data = request.get_json()
-
+        check = check_username_legal(data["username"])
+        if check.is_err:
+            return check.err_message, check.err_status
         try:
-            check = check_for_error(is_not_existing=data["username"])
-            if check[0]:
-                return check[1], check[2]
-
             db_create_user(conn, data["username"], data["password"])
             return data["username"], status.CREATED
         except (KeyError, ValueError):
@@ -354,9 +368,15 @@ def create_app(storage_folder="./db/"):
     @app.patch('/admin/users/<user>')
     @auth.login_required
     def admin_change_password(user):
-        check = check_for_error(is_existing=user, is_admin=auth.current_user(), check_request=request)
-        if check[0]:
-            return check[1], check[2]
+        check = check_user_exists(user)
+        if check.is_err:
+            return check.err_message, check.err_status
+        check = check_user_is_admin(auth.current_user())
+        if check.is_err:
+            return check.err_message, check.err_status
+        check = check_request_is_json(request)
+        if check.is_err:
+            return check.err_message, check.err_status
 
         data = request.get_json()
 
@@ -369,9 +389,9 @@ def create_app(storage_folder="./db/"):
     @app.delete('/admin/reset_all_indices')
     @auth.login_required
     def admin_reset_all_indices():
-        check = check_for_error(is_admin=auth.current_user())
-        if check[0]:
-            return check[1], check[2]
+        check = check_user_is_admin(auth.current_user())
+        if check.is_err:
+            return check.err_message, check.err_status
 
         db_reset_all_current_indices(conn)
         return "All indices are reset.", status.OK
@@ -379,9 +399,12 @@ def create_app(storage_folder="./db/"):
     @app.delete('/admin/users/<user>')
     @auth.login_required
     def admin_delete_user(user):
-        check = check_for_error(is_existing=user, is_admin=auth.current_user())
-        if check[0]:
-            return check[1], check[2]
+        check = check_user_exists(user)
+        if check.is_err:
+            return check.err_message, check.err_status
+        check = check_user_is_admin(auth.current_user())
+        if check.is_err:
+            return check.err_message, check.err_status
 
         db_delete_user(conn, user)
         return {}, status.OK
