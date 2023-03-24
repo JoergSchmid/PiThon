@@ -19,7 +19,7 @@ def test_num_can_be_reset_without_auth(client, number, first_ten, next_ten):
     assert client.get(f"api?number={number}&amount=10").data == first_ten
     assert client.get(f"api?number={number}").data == first_ten
     client.delete(f"api?number={number}")
-    assert client.get(f"api?number={number}").data == b"empty"
+    assert client.get(f"api?number={number}").data == b""
 
 
 @pytest.mark.parametrize("number,first_ten,next_ten", [("pi", PI_FIRST_10, PI_NEXT_10),
@@ -31,7 +31,7 @@ def test_num_get_index_and_amount_without_auth(client, number, first_ten, next_t
     assert client.get(f"api?number={number}&amount=0").data == first_ten[0:1]
     assert client.get(f"api?number={number}&amount=20").data == first_ten + next_ten
     assert client.get(f"api?number={number}&index=0&amount=10").data == first_ten
-    assert client.get(f"api?number={number}&index=5&amount=13").data == first_ten[6:12] + next_ten[0:7]
+    assert client.get(f"api?number={number}&index=5&amount=13").data == first_ten[7:12] + next_ten[0:8]
 
 
 @pytest.mark.parametrize("number,first_ten,next_ten", [("pi", PI_FIRST_10, PI_NEXT_10),

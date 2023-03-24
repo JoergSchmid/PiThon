@@ -123,23 +123,20 @@ def create_app(storage_folder="./db/"):
                 return num.get_all_from_file(path), status.OK
 
             if user is None and number_ is not None and index is None:
-                return num.get_next_n_digits(amount, path), status.OK
+                return num.get_next_digits_for_txt_file(amount, path), status.OK
 
             if user is None and number_ is not None and amount is None:
                 return num.get_digit_at_index(index), status.OK
 
             if user is None and number_ is not None:
-                return num.get_n_digits_from_index(index, amount), status.OK
+                return num.get_digits(index, amount), status.OK
 
             if user is None:
                 return render_template("api_help.jinja", message="Help page :) (NYI)"), status.OK
 
             # <--- User given --->
             if number_ is not None and index is None and amount is None:
-                return num.get_next_ten_digits_for_user(user, app.config[CONFIG_DB_PATH]), status.OK
-
-            if number_ is not None and index is None and amount is None:
-                return num.get_next_ten_digits_for_user(user, app.config[CONFIG_DB_PATH]), status.OK
+                return num.get_digits_for_user(user, 10, app.config[CONFIG_DB_PATH]), status.OK
 
             if number_ is not None and index is None:
                 return num.get_next_n_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK

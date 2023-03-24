@@ -10,6 +10,7 @@
         <tr>
             <th></th>
             <th>0</th>
+            <th>.</th>
             <th>1</th>
             <th>2</th>
             <th>3</th>
@@ -19,6 +20,7 @@
             <th>7</th>
             <th>8</th>
             <th>9</th>
+            <th>10</th>
         </tr>
         </thead>
         <tbody id="table_body"></tbody>
@@ -41,11 +43,11 @@
         row2.insertCell(0).innerHTML = "e";
         row3.insertCell(0).innerHTML = "Sqrt(2)";
 
-        const pi_ten = httpGet(window.location.origin + "/pi/get_first_ten");
-        const e_ten = httpGet(window.location.origin + "/e/get_first_ten");
-        const sqrt2_ten = httpGet(window.location.origin + "/sqrt2/get_first_ten");
+        const pi_ten = httpGet(window.location.origin + "/api?number=pi&index=0&amount=10");
+        const e_ten = httpGet(window.location.origin + "/api?number=e&index=0&amount=10");
+        const sqrt2_ten = httpGet(window.location.origin + "/api?number=sqrt2&index=0&amount=10");
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 12; i++) {
             row1.insertCell(i+1).innerHTML = pi_ten[i];
             row2.insertCell(i+1).innerHTML = e_ten[i];
             row3.insertCell(i+1).innerHTML = sqrt2_ten[i];

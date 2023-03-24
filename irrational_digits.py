@@ -22,58 +22,31 @@ class IrrationalDigits(ABC):
         i_num = self.get_number_with_accuracy(index)
         return i_num[-1]
 
-    def get_first_ten_digits_without_point(self):
-        i_num = self.get_number_with_accuracy(10)[-12:]
-        i_num = i_num.replace('.', '')
-        return i_num
-
-    def get_next_ten_digits(self, txt_path):
-        with open(txt_path, "a+") as f:
-            f.seek(0)
-            current_number_of_digits = len(f.readline()) - 2
-            next_digits = self.get_next_ten_digits_from_index(current_number_of_digits)
-            f.write(next_digits)
-            return next_digits
-
-    def get_next_n_digits(self, amount, txt_path):
-        with open(txt_path, "a+") as f:
-            f.seek(0)
-            current_number_of_digits = len(f.readline()) - 2
-            next_digits = self.get_n_digits_from_index(current_number_of_digits, amount)
-            f.write(next_digits)
-            return next_digits
-
-    def get_next_ten_digits_from_index(self, index):
-        if index < 0:
-            index = 0
-        i_num = self.get_number_with_accuracy(index + 10)
-        if index == 0:
-            return i_num[-12:]
-        return i_num[-10:]
-
-    def get_n_digits_from_index(self, index, amount):
-        if index < 0:
-            index = 0
+    def get_digits(self, index: int, amount: int) -> str:
+        if index < 0 or amount < 0:
+            print(f"index or amount too small in get_digits():\nindex={index} & amount={amount}")
+            raise ValueError
         i_num = self.get_number_with_accuracy(index + amount)
         if index == 0:
-            return self.get_digits_up_to(amount)
-        return i_num[-amount-1:-1]
+            return i_num[-amount-2:]
+        return i_num[-amount:]
 
-    def get_next_ten_digits_for_user(self, user, db_path):
+    def get_next_digits_for_txt_file(self, amount: int, txt_path: str) -> str:
+        with open(txt_path, "a+") as f:
+            f.seek(0)
+            current_number_of_digits = len(f.readline()) - 2
+            if current_number_of_digits < 0:
+                current_number_of_digits = 0
+            next_digits = self.get_digits(current_number_of_digits, amount)
+            f.write(next_digits)
+            return next_digits
+
+    def get_digits_for_user(self, user: str, amount: int, db_path: str) -> str:
         conn = create_connection(db_path)
         current_index = db_get_current_index(conn, user, self.name)
         if current_index < 0:
             return "error: user not found"
-        last_ten = self.get_next_ten_digits_from_index(current_index)
-        db_raise_current_index(conn, user, self.name, 10)
-        return last_ten
-
-    def get_next_n_digits_for_user(self, user, amount, db_path):
-        conn = create_connection(db_path)
-        current_index = db_get_current_index(conn, user, self.name)
-        if current_index < 0:
-            return "error: user not found"
-        last_ten = self.get_n_digits_from_index(current_index, amount)
+        last_ten = self.get_digits(current_index, amount)
         db_raise_current_index(conn, user, self.name, amount)
         return last_ten
 
@@ -83,11 +56,8 @@ class IrrationalDigits(ABC):
             f.seek(0)
             line = f.readline()
             if len(line) == 0:
-                return "empty"
+                return ""
             return line
-
-    def get_digits_up_to(self, index):
-        return self.get_number_with_accuracy(index)
 
 
 class MpMathNumbers(IrrationalDigits):
@@ -130,5 +100,3 @@ class Sqrt2(MpMathNumbers):
     @staticmethod
     def get_mp_math_number():
         return mpmath.mp.sqrt(2)
-
-

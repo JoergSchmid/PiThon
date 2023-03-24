@@ -170,7 +170,7 @@ def get_digit_from_number_digits(conn, number, digit_index):
 def create_number_digits_index_up_to(conn, number, digit_index):
     next_index = int(db_execute(conn, "SELECT COUNT(*) FROM number_digits WHERE number =:number",
                                 {'number': number.name})[0])
-    all_digits = number().get_digits_up_to(int(digit_index))
+    all_digits = number().get_number_with_accuracy(int(digit_index))
     all_digits = all_digits.replace('.', '')
     for i in range(next_index, int(digit_index) + 1):
         db_execute(conn, "INSERT INTO number_digits (number, digit_index, digit)"
