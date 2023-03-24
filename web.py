@@ -83,17 +83,20 @@ def create_app(storage_folder="./db/"):
         number_ = request.args.get("number")
         index_ = request.args.get("index")
         amount_ = request.args.get("amount")
+        user_from_session = request.args.get("session")
         data = request.get_json() if request.is_json else None
+
+        if user is not None and not verify_password(user, request.authorization.password):
+            return render_template("api_help.jinja", message="Wrong username or password."), status.NOT_FOUND
+
+        if user_from_session == "true":
+            user = session.get("username")
 
         def get_class_and_path():
             for numberClass, txt_filepath in number_configs:
                 if number_ == numberClass.name:
                     return numberClass(), txt_filepath
             return None, None
-
-        if user is not None:
-            if not db_is_user_existing(conn, user) or not verify_password(user, request.authorization.password):
-                return render_template("api_help.jinja", message="Wrong username or password."), status.NOT_FOUND
 
         if number_ is not None:
             if number_ not in ["pi", "e", "sqrt2"]:

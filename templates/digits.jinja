@@ -37,27 +37,27 @@
 
     function onOneDigitButtonClick() {
       if (indexInput.value >= 0)
-        indexOutput.innerHTML = httpReq(window.location.origin + "/" + numberName.value + "/" + indexInput.value);
+        indexOutput.innerHTML = httpReq(window.location.origin + "/api?number=" + numberName.value + "&index=" + indexInput.value);
     }
 
     function onSubmitButtonClick() {
       if (append.checked)
-        numberOutput.innerHTML += httpReq(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
+        numberOutput.innerHTML += httpReq(window.location.origin + "/api?number=" + numberName.value + "&amount=10" {% if session['username'] != null %} + "&session=true" {% endif %});
       else
-        numberOutput.innerHTML = httpReq(window.location.origin + "/" + numberName.value {% if session['username'] != null %} + "/{{session['username']}}" {% endif %});
+        numberOutput.innerHTML = httpReq(window.location.origin + "/api?number=" + numberName.value + "&amount=10" {% if session['username'] != null %} + "&session=true" {% endif %});
     }
 
     function onResetButtonClick() {
       {% if session['username'] == null %}
-        httpReq(window.location.origin + "/" + numberName.value + "/reset");
+        httpReq(window.location.origin + "/api?number=" + numberName.value, method="DELETE");
       {% else %}
-        httpReq(window.location.origin + "/" + numberName.value + "/" + "{{session['username']}}", method="DELETE")
+        httpReq(window.location.origin + "/api?number=" + numberName.value + "&session=true", method="DELETE")
       {% endif %}
-      number_output.innerHTML = "";
+      numberOutput.innerHTML = "";
     }
 
     function onShowAllButtonClick() {
-      numberOutput.innerHTML = httpReq(window.location.origin + "/get_all/" + numberName.value);
+      numberOutput.innerHTML = httpReq(window.location.origin + "/api?number=" + numberName.value {% if session['username'] != null %} + "&session=true" {% endif %});
     }
 
     function httpReq(url, method="GET") {
