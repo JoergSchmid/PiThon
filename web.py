@@ -73,7 +73,7 @@ def create_app(storage_folder="./db/"):
 
         return False, None, None
 
-    def fancy_message(text, http_status, link_message="Continue", page=""):
+    def create_text_with_link_response(text, http_status, link_message="Continue", page=""):
         return f"""<p>{text}</p><br>
                    <a href=/{page}>{link_message}</a>""", http_status
 
@@ -206,7 +206,7 @@ def create_app(storage_folder="./db/"):
     def download_file(number_name):
         check = check_for_error(is_valid_number_name=number_name)
         if check[0]:
-            return fancy_message(f"{check[1]}", check[2])
+            return create_text_with_link_response(f"{check[1]}", check[2])
         path = app.config[CONFIG_TXT_PATH_MAPPING[number_name]]
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
@@ -270,7 +270,7 @@ def create_app(storage_folder="./db/"):
                 session["username"] = username
                 last_page = request.args.get("current_page")
                 if last_page is None:
-                    return fancy_message("Welcome to PiThon, " + username + " :)", status.CREATED)
+                    return create_text_with_link_response("Welcome to PiThon, " + username + " :)", status.CREATED)
                 return redirect(request.args.get("current_page"))
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
@@ -294,7 +294,7 @@ def create_app(storage_folder="./db/"):
 
                 db_delete_user(conn, username)
                 session.pop('username', None)
-                return fancy_message(f"{username} deleted :(", status.OK)
+                return create_text_with_link_response(f"{username} deleted :(", status.OK)
             except (KeyError, ValueError):
                 return "Invalid Request", status.BAD_REQUEST
         return f"""<form action='' method='POST'>
@@ -307,7 +307,7 @@ def create_app(storage_folder="./db/"):
     def number_digits_view(num, index):
         check = check_for_error(is_valid_number_name=num)
         if check[0]:
-            return fancy_message(f"{check[1]}", check[2])
+            return create_text_with_link_response(f"{check[1]}", check[2])
         return get_digit_from_number_digits(conn, CLASS_MAPPING[num], index), status.OK
 
     @app.route('/admin')
@@ -315,7 +315,7 @@ def create_app(storage_folder="./db/"):
         username = session.get("username")
         check = check_for_error(is_admin=username)
         if check[0]:
-            return fancy_message(f"{check[1]}", check[2])
+            return create_text_with_link_response(f"{check[1]}", check[2])
 
         users_and_indices, numbers_and_indices = db_get_user_data_for_admin_panel(conn)
         users, ranks = zip(*users_and_indices)
@@ -333,7 +333,7 @@ def create_app(storage_folder="./db/"):
         username = session.get("username")
         check = check_for_error(is_admin=username)
         if check[0]:
-            return fancy_message(f"{check[1]}", check[2])
+            return create_text_with_link_response(f"{check[1]}", check[2])
 
         user = request.args.get("user")
         if db_get_rank(conn, user) == "admin":
