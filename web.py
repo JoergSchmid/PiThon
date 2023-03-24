@@ -218,7 +218,7 @@ def create_app(storage_folder="./db/"):
             session["theme"] = "light"
         else:
             session["theme"] = "dark"
-        return redirect(request.args.get("current_page"))
+        return "", status.OK
 
     @app.route('/profile')
     def profile():
