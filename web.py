@@ -224,25 +224,18 @@ def create_app(storage_folder="./db/"):
     def profile():
         return render_template("profile.jinja"), status.OK
 
-    @app.route('/login', methods=['GET', 'POST'])
+    @app.post('/login')
     def login():
-        if request.method == "POST":
-            username = request.form["username"]
-            password = request.form["password"]
-            if not verify_password(username, password):
-                return "Wrong username or password.", status.FORBIDDEN
-            session["username"] = username
-            session["rank"] = db_get_rank(conn, username)
-            last_page = request.args.get("current_page")
-            if last_page is None:
-                return "Logged in as " + session["username"], status.OK
-            return redirect(last_page)
-
-        return """<form action='' method='POST'>
-                  <input type='text' name='username'><br>
-                  <input type='password' name='password'><br>
-                  <input type='submit' value='Login'>
-                  </form>""", status.OK
+        username = request.form["username"]
+        password = request.form["password"]
+        if not verify_password(username, password):
+            return "Wrong username or password.", status.FORBIDDEN
+        session["username"] = username
+        session["rank"] = db_get_rank(conn, username)
+        last_page = request.args.get("current_page")
+        if last_page is None:
+            return "Logged in as " + session["username"], status.OK
+        return redirect(last_page)
 
     @app.route('/logout')
     def logout():
@@ -252,56 +245,43 @@ def create_app(storage_folder="./db/"):
             return "Logged out.", status.OK
         return redirect(request.args.get("current_page"))
 
-    @app.route('/register', methods=['GET', 'POST'])
+    @app.post('/register')
     def register():
-        if request.method == "POST":
-            username = request.form["username"]
-            password = request.form["password"]
+        username = request.form["username"]
+        password = request.form["password"]
 
-            if request.form["confirm_password"] != password:
-                return "Password confirmation failed.", status.FORBIDDEN
+        if request.form["confirm_password"] != password:
+            return "Password confirmation failed.", status.FORBIDDEN
 
-            check = check_for_error(is_not_existing=username)
+        check = check_for_error(is_not_existing=username)
+        if check[0]:
+            return check[1], check[2]
+
+        try:
+            db_create_user(conn, username, password)
+            session["username"] = username
+            last_page = request.args.get("current_page")
+            if last_page is None:
+                return create_text_with_link_response("Welcome to PiThon, " + username + " :)", status.CREATED)
+            return redirect(request.args.get("current_page"))
+        except (KeyError, ValueError):
+            return "Invalid Request", status.BAD_REQUEST
+
+    @app.route('/delete', methods=['POST', 'DELETE'])
+    def delete():
+        username = session.get("username")
+        password = request.form["password"]
+
+        try:
+            check = check_for_error(is_existing=username, check_password=password)
             if check[0]:
                 return check[1], check[2]
 
-            try:
-                db_create_user(conn, username, password)
-                session["username"] = username
-                last_page = request.args.get("current_page")
-                if last_page is None:
-                    return create_text_with_link_response("Welcome to PiThon, " + username + " :)", status.CREATED)
-                return redirect(request.args.get("current_page"))
-            except (KeyError, ValueError):
-                return "Invalid Request", status.BAD_REQUEST
-        return """<form action='' method='POST'>
-                    <input type='text' name='username'><br>
-                    <input type='password' name='password'><br>
-                    <input type='password' name='confirm_password'><br>
-                    <input type='submit' value='Register'>
-                    </form>""", status.OK
-
-    @app.route('/delete', methods=['GET', 'POST'])
-    def delete():
-        if request.method == "POST":
-            username = session.get("username")
-            password = request.form["password"]
-
-            try:
-                check = check_for_error(is_existing=username, check_password=password)
-                if check[0]:
-                    return check[1], check[2]
-
-                db_delete_user(conn, username)
-                session.pop('username', None)
-                return create_text_with_link_response(f"{username} deleted :(", status.OK)
-            except (KeyError, ValueError):
-                return "Invalid Request", status.BAD_REQUEST
-        return f"""<form action='' method='POST'>
-                    <p>Confirm password to delete {session.get('username')}.</p><br>
-                    <input type='password' name='password'><br>
-                    <input type='submit' value='Delete'>
-                    </form>""", status.OK
+            db_delete_user(conn, username)
+            session.pop('username', None)
+            return create_text_with_link_response(f"{username} deleted :(", status.OK)
+        except (KeyError, ValueError):
+            return "Invalid Request", status.BAD_REQUEST
 
     @app.route('/db/<num>/<int:index>')
     def number_digits_view(num, index):
