@@ -191,8 +191,8 @@ def create_app(storage_folder="./db/"):
 
     @auth.verify_password
     def verify_password(username, password):
-        pw_hash = db_get_password(create_connection(app.config[CONFIG_DB_PATH]), username)
-        return pw_hash is not None and check_password_hash(pw_hash, password)
+        pw_hash = db_get_password(conn, username)
+        return pw_hash is not None and check_password_hash(db_get_password(conn, username), password)
 
     @app.route('/tic_tac_toe')
     def tic_tac_toe():
