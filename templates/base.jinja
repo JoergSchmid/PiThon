@@ -17,7 +17,7 @@
     {% if session["username"] == null %} value="Login"
     {% else %} value="{{session['username']}}" {% endif %}>
 <input type="button" id="toggleDM" value="Toggle darkmode" onclick="toggleDarkMode()">
-{% if session["username"] == "joerg" %}
+{% if session["rank"] == "admin" %}
     <input type="button" id="adminPanel" value="Admin Panel" onclick="adminPanel()">
 {% endif %}
 

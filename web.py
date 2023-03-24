@@ -142,7 +142,7 @@ def create_app(storage_folder="./db/"):
                 return num.get_digits_for_user(user, 10, app.config[CONFIG_DB_PATH]), status.OK
 
             if number_ is not None and index is None:
-                return num.get_next_n_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK
+                return num.get_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK
 
             if number_ is not None and amount is None:
                 return render_template("api_help.jinja",
@@ -229,10 +229,10 @@ def create_app(storage_folder="./db/"):
         if request.method == "POST":
             username = request.form["username"]
             password = request.form["password"]
-            if verify_password(username, password):
-                session["username"] = username
-            else:
+            if not verify_password(username, password):
                 return "Wrong username or password.", status.FORBIDDEN
+            session["username"] = username
+            session["rank"] = db_get_rank(conn, username)
             last_page = request.args.get("current_page")
             if last_page is None:
                 return "Logged in as " + session["username"], status.OK
