@@ -43,9 +43,9 @@
         row2.insertCell(0).innerHTML = "e";
         row3.insertCell(0).innerHTML = "Sqrt(2)";
 
-        const pi_ten = httpGet(window.location.origin + "/api?number=pi&index=0&amount=10");
-        const e_ten = httpGet(window.location.origin + "/api?number=e&index=0&amount=10");
-        const sqrt2_ten = httpGet(window.location.origin + "/api?number=sqrt2&index=0&amount=10");
+        const pi_ten = httpGet("/api?number=pi&index=0&amount=10");
+        const e_ten = httpGet("/api?number=e&index=0&amount=10");
+        const sqrt2_ten = httpGet("/api?number=sqrt2&index=0&amount=10");
 
         for (let i = 0; i < 12; i++) {
             row1.insertCell(i+1).innerHTML = pi_ten[i];
