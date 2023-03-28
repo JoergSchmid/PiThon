@@ -84,9 +84,9 @@ def create_app(storage_folder="./db/"):
             return Err(True, "Unknown number.", status.NOT_FOUND)
         return Err(False, None, None)
 
-    def create_text_with_link_response(text, http_status, link_message="Continue", page=""):
+    def create_text_with_link_response(text, http_status, link_message="Continue", path=""):
         return f"""<p>{text}</p><br>
-                   <a href=/{page}>{link_message}</a>""", http_status
+                   <a href=/{path}>{link_message}</a>""", http_status
 
     @app.route('/api', methods=['GET', 'POST', 'DELETE'])
     def api():
