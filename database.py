@@ -45,7 +45,7 @@ def db_execute(conn, query, parameters, fetchall=False):
 
 # <--- Get Functions for tables "users" and "number_indices" --->
 def db_get_all_user_data(conn, user):
-    data = db_execute(conn, "SELECT * FROM users INNER JOIN users USING (user_id) WHERE username =:username",
+    data = db_execute(conn, "SELECT * FROM users WHERE username =:username",
                       {'username': user})
     return data
 
