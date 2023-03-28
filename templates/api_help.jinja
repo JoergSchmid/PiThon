@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.jinja' %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>PiThon api</title>
-    <link rel="stylesheet" href="../static/css/main.css">
-    <link rel="icon" type="image" href="../static/images/favicon.ico">
-</head>
+{% block title %}PiThon api{% endblock %}
 
-<body>
-<p>{{message}}</p>
-<h1>PiThon api guide</h1>
+{% block content %}
+<p style="margin-top: 0px;margin-bottom: 0px;" class="error-message">{{message}}</p>
+<h1 style="margin-top: 0px;">PiThon api guide</h1>
 <h4>You can use this api using Basic Auth to specify and validate the user and url-parameters. These parameters are:</h4>
 <ul>
     <li><b>number:</b> choose your number: must be "pi", "e" or "sqrt2"</li>
@@ -33,4 +27,5 @@
     <li>Set a users index to a certain value by <b>POST</b>ing with <b>number</b> and <b>index</b> parameters.</li>
     <li>Alternatively, you can use <b>DELETE</b> and <b>number</b> to reset a number to 0. With <b>auth</b>, for that user, without you reset the global progress.</li>
 </ul>
-</body>
+
+{% endblock %}
