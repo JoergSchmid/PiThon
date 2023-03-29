@@ -38,11 +38,11 @@ def test_num_get_index_and_amount_without_auth(client, number, first_ten, next_t
                                                        ("e", E_FIRST_10, E_NEXT_10),
                                                        ("sqrt2", SQRT2_FIRST_10, SQRT2_NEXT_10)])
 def test_user_indices_can_be_reset(client, number, first_ten, next_ten):
-    client.delete(f"api?number={number}", auth=TEST_USER_STD)
-    assert client.get(f"api?number={number}", auth=TEST_USER_STD).data == first_ten
-    assert client.get(f"api?number={number}", auth=TEST_USER_STD).data == next_ten
-    client.delete(f"api?number={number}", auth=TEST_USER_STD)
-    assert client.get(f"api?number={number}", auth=TEST_USER_STD).data == first_ten
+    client.post(f"api/user?number={number}&index=0", auth=TEST_USER_STD)
+    assert client.get(f"api/user?number={number}", auth=TEST_USER_STD).data == first_ten
+    assert client.get(f"api/user?number={number}", auth=TEST_USER_STD).data == next_ten
+    client.post(f"api/user?number={number}&index=0", auth=TEST_USER_STD)
+    assert client.get(f"api/user?number={number}", auth=TEST_USER_STD).data == first_ten
 
 
 @pytest.mark.parametrize("endpoint,first_ten", [("/pi", PI_FIRST_10),
@@ -58,9 +58,9 @@ def test_users_can_be_created_and_deleted(client):
     tmp_user = "tmp_user"
     tmp_pw = "tmp_password"
 
-    client.delete("api", json={"confirm_deletion": True}, auth=(tmp_user, tmp_pw))
+    client.delete("api/user", json={"confirm_deletion": True}, auth=(tmp_user, tmp_pw))
     assert client.post("api", json={"username": tmp_user, "password": tmp_pw}).status_code == status.CREATED
-    assert client.delete("api", json={"confirm_deletion": True},
+    assert client.delete("api/user", json={"confirm_deletion": True},
                          auth=(tmp_user, tmp_pw)).status_code == status.OK
 
 

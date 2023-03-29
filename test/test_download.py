@@ -10,7 +10,7 @@ from test_api import PI_FIRST_10, PI_NEXT_10, E_NEXT_10, E_FIRST_10, SQRT2_FIRST
                                                  ("sqrt2", SQRT2_FIRST_10 + SQRT2_NEXT_10)])
 def test_download_returns_file(client, number, first_twenty):
     client.get(f"api?number={number}&amount=20")
-    download = client.get(f"/digits/{number}")
+    download = client.get(f"api/download?number={number}")
     assert download.data == first_twenty
     # This header is what triggers the browser to start a download and not display it
     assert download.headers.get("content-disposition") == f"attachment; filename={number}.txt"

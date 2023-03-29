@@ -5,27 +5,44 @@
 {% block content %}
 <p style="margin-top: 0px;margin-bottom: 0px;" class="error-message">{{message}}</p>
 <h1 style="margin-top: 0px;">PiThon api guide</h1>
-<h4>You can use this api using Basic Auth to specify and validate the user and url-parameters. These parameters are:</h4>
+<h4>You can use this api with url-parameters. For user related methods use /api/user while you are logged in or with Basic Auth. The url parameters are:</h4>
 <ul>
     <li><b>number:</b> choose your number: must be "pi", "e" or "sqrt2"</li>
     <li><b>index:</b> select a specific digit of your number</li>
     <li><b>amount:</b> select the number of digits you want</li>
 </ul><br>
-<h4>Using these parameters in various combinations will result in different responses. Here are some examples:</h4>
+<h4><b>GET</b> request <b>without</b> user:</h4>
 <ul>
-    <li>Basic Auth currently only works in combination with "number", i.e. "/api?number=pi". Progress will be saved for the given user.</li>
-    <li>Instead of <b>auth</b> you can use <b>?session=true</b>. Only works when logged in.</li>
-    <li>Without auth only providing <b>number</b> will show you the current progress of that number.</li>
-    <li><b>Index</b> shows you the digit of the the chosen <b>number</b>. <b>Amount</b> will show the given number from that index. No index given means from start.</li>
-    <li>"/api?number=pi&amount=3" -> <b>3.141</b></li>
-    <li>"/api?number=e&index=2&amount=4" -> 2.7 <b>1828</b></li>
+    <li>You always have to provide <b>?number</b>, like "/api?number=pi". This url will show all progress of that number.</li>
+    <li>Adding <b>&index</b> and/or <b>&amount</b> (default 10) will show specific parts of the number.</li>
+    <li>Not providing an <b>&index</b> will get you on the global progress, saved in a txt file.</li>
+    <li>This txt file can be downloaded on <b>/api/download?number=</b></li>
 </ul><br>
-<h4>With POST and DELETE requests you can do even more:</h4>
+<h4><b>GET</b> request <b>with</b> user:</h4>
 <ul>
+    <li>When a user is given, you can use this request to progress on your own profile.</li>
+    <li>You have to provide the <b>?number</b> name and can add an <b>&amount</b> (default 10), but thats it. No indexing possible.</li>
+
     <li>Create a new user with a <b>POST</b> request: Do not user url-parameters, instead user <b>JSON</b> to send a "username" and a "password".</li>
     <li><b>DELETE</b> a user by sending that users <b>auth</b> and use <b>JSON</b> to send "confirm_deletion" set as true.</li>
     <li>Set a users index to a certain value by <b>POST</b>ing with <b>number</b> and <b>index</b> parameters.</li>
     <li>Alternatively, you can use <b>DELETE</b> and <b>number</b> to reset a number to 0. With <b>auth</b>, for that user, without you reset the global progress.</li>
+</ul>
+<h4><b>POST</b> request <b>without</b> user:</h4>
+<ul>
+    <li>You can create a new user with a <b>POST</b> request: Do <b>not</b> user url-parameters, instead use <b>JSON</b> to send a "username" and a "password".</li>
+</ul>
+<h4><b>POST</b> request <b>with</b> user:</h4>
+<ul>
+    <li><b>Reset</b> your progress or set it to a specific value using all 3 url-parameters.</li>
+</ul>
+<h4><b>DELETE</b> request <b>without</b> user:</h4>
+<ul>
+    <li><b>Reset</b> the global progress. Only use <b>?number</b>.</li>
+</ul>
+<h4><b>DELETE</b> request <b>with</b> user:</h4>
+<ul>
+    <li><b>Delete</b> your account. To avoid accedental account deletions, you have to provide JSON data along with it: <b>"confirm_deletion" = true</b>.</li>
 </ul>
 
 {% endblock %}

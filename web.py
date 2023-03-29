@@ -18,7 +18,7 @@ CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
 CLASS_MAPPING = {Pi.name: Pi, E.name: E, Sqrt2.name: Sqrt2}
 
-Err = namedtuple("Err", ["is_err", "err_message", "err_status"], defaults=None)
+Err = namedtuple("Err", ["is_err", "message", "status"], defaults=None)
 
 
 def create_app(storage_folder="./db/"):
@@ -88,113 +88,166 @@ def create_app(storage_folder="./db/"):
         return f"""<p>{text}</p><br>
                    <a href=/{path}>{link_message}</a>""", http_status
 
-    @app.route('/api', methods=['GET', 'POST', 'DELETE'])
-    def api():
+    def get_instance_from_number_name(number):
+        for numberClass, txt_filepath in number_configs:
+            if number == numberClass.name:
+                return numberClass()
+        return None
+
+    def get_txt_path_from_number_name(number):
+        for numberClass, txt_filepath in number_configs:
+            if number == numberClass.name:
+                return txt_filepath
+        return None
+
+    def api_check_for_valid_user_auth_or_session():
         user = request.authorization.username if request.authorization is not None else None
-        number_ = request.args.get("number")
+        if user is None:
+            user = session.get("username")
+            if user is None:
+                return None, Err(True, "No username given. Please log in or use auth.", status.NOT_FOUND)
+        elif not verify_password(user, request.authorization.password):
+            return Err(True, "Wrong username or password.", status.NOT_FOUND)
+        return Err(False, user, status.FOUND)
+
+    def api_check_for_valid_request_input(number, index, amount) -> Err:
+        if number is not None:
+            if number not in ["pi", "e", "sqrt2"]:
+                return Err(True, f"{number} is not a valid number.", status.NOT_FOUND)
+
+        if index is not None:
+            if not index.isnumeric() or int(index) < 0:
+                return Err(True, f"{index} is not a valid index.", status.BAD_REQUEST)
+
+        if amount is not None:
+            if not amount.isnumeric() or int(amount) < 0:
+                return Err(True, f"{amount} is not a valid amount.", status.BAD_REQUEST)
+
+        return Err(False, "", status.OK)
+
+    def api_str_to_int(var1, var2):
+        out1 = int(var1) if var1 is not None else None
+        out2 = int(var2) if var2 is not None else None
+        return out1, out2
+
+    @app.get('/api/user')
+    def api_get_number_with_user():
+        check = api_check_for_valid_user_auth_or_session()
+        if check.is_err:
+            return render_template("api_help.jinja", message=check.message), check.status
+        user = check.message
+
+        number = request.args.get("number")
         index_ = request.args.get("index")
         amount_ = request.args.get("amount")
-        user_from_session = request.args.get("session")
-        data = request.get_json() if request.is_json else None
 
-        if user is not None and not verify_password(user, request.authorization.password):
-            return render_template("api_help.jinja", message="Wrong username or password."), status.NOT_FOUND
+        check = api_check_for_valid_request_input(number, index_, amount_)
+        if check.is_err:
+            return render_template("api_help.jinja", message=check.message), check.status
 
-        if user_from_session == "true":
-            user = session.get("username")
+        index, amount = api_str_to_int(index_, amount_)
 
-        def get_class_and_path():
-            for numberClass, txt_filepath in number_configs:
-                if number_ == numberClass.name:
-                    return numberClass(), txt_filepath
-            return None, None
+        if number is None or index_ is not None:
+            return render_template("api_help.jinja", message="Unknown operation."), status.BAD_REQUEST
 
-        if number_ is not None:
-            if number_ not in ["pi", "e", "sqrt2"]:
-                return render_template("api_help.jinja",
-                                       message=f"{number_} is not a valid number."), status.NOT_FOUND
+        number_instance = get_instance_from_number_name(number)
 
-        if index_ is not None:
-            if not index_.isnumeric() or int(index_) < 0:
-                return render_template("api_help.jinja",
-                                       message=f"{index_} is not a valid index."), status.BAD_REQUEST
+        if amount is None:
+            return number_instance.get_digits_for_user(user, 10, app.config[CONFIG_DB_PATH]), status.OK
+        return number_instance.get_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK
 
-        if amount_ is not None:
-            if not amount_.isnumeric() or int(amount_) < 0:
-                return render_template("api_help.jinja",
-                                       message=f"{amount_} is not a valid amount."), status.BAD_REQUEST
+    @app.get('/api')
+    def api_get_number_without_user():
+        number = request.args.get("number")
+        index_ = request.args.get("index")
+        amount_ = request.args.get("amount")
 
-        if request.method == "GET" and user is None and number_ is None and index_ is None and amount_ is None:
-            return render_template("api_help.jinja"), status.OK
+        check = api_check_for_valid_request_input(number, index_, amount_)
+        if check.is_err:
+            return render_template("api_help.jinja", message=check.message), check.status
 
-        num, path = get_class_and_path()
-        index = int(index_) if index_ is not None else None
-        amount = int(amount_) if amount_ is not None else None
+        if number is None:
+            return render_template("api_help.jinja"), status.BAD_REQUEST
 
-        if request.method == "GET":
-            # <--- No user given --->
-            if user is None and number_ is not None and index is None and amount is None:
-                return num.get_all_from_file(path), status.OK
+        index, amount = api_str_to_int(index_, amount_)
+        number_instance = get_instance_from_number_name(number)
+        path = get_txt_path_from_number_name(number)
 
-            if user is None and number_ is not None and index is None:
-                return num.get_next_digits_for_txt_file(amount, path), status.OK
+        if index is None:
+            if amount is None:
+                return number_instance.get_all_from_file(path), status.OK
+            return number_instance.get_next_digits_for_txt_file(amount, path), status.OK
 
-            if user is None and number_ is not None and amount is None:
-                return num.get_digit_at_index(index), status.OK
+        if amount is None:
+            return number_instance.get_digit_at_index(index), status.OK
+        return number_instance.get_digits(index, amount), status.OK
 
-            if user is None and number_ is not None:
-                return num.get_digits(index, amount), status.OK
+    @app.post('/api/user')
+    def api_post_set_user_index():
+        check = api_check_for_valid_user_auth_or_session()
+        if check.is_err:
+            return render_template("api_help.jinja", message=check.message), check.status
+        user = check.message
 
-            if user is None:
-                return render_template("api_help.jinja", message="Help page :) (NYI)"), status.OK
+        number = request.args.get("number")
+        index = request.args.get("index")
 
-            # <--- User given --->
-            if number_ is not None and index is None and amount is None:
-                return num.get_digits_for_user(user, 10, app.config[CONFIG_DB_PATH]), status.OK
+        check = api_check_for_valid_request_input(number, index, None)
+        if check.is_err:
+            return render_template("api_help.jinja", message=check.message), check.status
 
-            if number_ is not None and index is None:
-                return num.get_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK
+        if number is None or index is None:
+            return render_template("api_help.jinja", message="Unknown request."), status.BAD_REQUEST
 
-            if number_ is not None and amount is None:
-                return render_template("api_help.jinja",
-                                       message="No known operation available."), status.BAD_REQUEST
+        db_set_current_index(conn, user, number, index)
+        return f"Index of {number} for {user} successfully set to {index}.", status.OK
 
-            if number_ is not None:
-                return render_template("api_help.jinja",
-                                       message="User, index & amount alone do not mix (yet)."), status.BAD_REQUEST
+    @app.post('/api')
+    def api_post_create_new_user():
+        req = request.get_json() if request.is_json else None
 
-        if request.method == "POST":
-            if user is None and number_ is None and index is None and amount is None:
-                if data["username"] is None or data["password"] is None:
-                    return render_template("api_help.jinja", message="Insufficient json data."), status.BAD_REQUEST
+        if req is None or req["username"] is None or req["password"] is None:
+            return render_template("api_help.jinja", message="Insufficient json data."), status.BAD_REQUEST
 
-                if db_is_user_existing(conn, data["username"]):
-                    return render_template("api_help.jinja", message="User already exists."), status.CONFLICT
+        if db_is_user_existing(conn, req["username"]):
+            return render_template("api_help.jinja", message="User already exists."), status.CONFLICT
 
-                db_create_user(conn, data["username"], data["password"])
-                return f"{data['username']} successfully created.", status.CREATED
+        db_create_user(conn, req["username"], req["password"])
+        return f"{req['username']} successfully created.", status.CREATED
 
-            if user is not None and number_ is not None and index is not None and amount is None:
-                db_set_current_index(conn, user, number_, index)
-                return f"Index successfully set to {index}.", status.OK
+    @app.delete('/api/user')
+    def api_delete_user():
+        check = api_check_for_valid_user_auth_or_session()
+        if check.is_err:
+            return render_template("api_help.jinja", message=check.message), check.status
+        user = check.message
+        req = request.get_json() if request.is_json else None
 
-        if request.method == "DELETE":
-            if user is not None and number_ is None and index is None and amount is None:
-                if data["confirm_deletion"]:
-                    db_delete_user(conn, user)
-                    return f"{user} successfully deleted.", status.OK
-                return render_template("api_help.jinja", message="{'confirm_deletion'} needed."), status.BAD_REQUEST
+        if req is None or not req["confirm_deletion"]:
+            return render_template("api_help.jinja", message="Insufficient json data."), status.BAD_REQUEST
+        db_delete_user(conn, user)
+        return f"{user} successfully deleted.", status.OK
 
-            if user is not None and number_ is not None and index is None and amount is None:
-                db_reset_current_index(conn, user, number_)
-                return f"{number_} reset successful.", status.OK
+    @app.delete('/api')
+    def api_reset_number():
+        number = request.args.get("number")
+        path = get_txt_path_from_number_name(number)
+        if number is not None:
+            with open(path, "w") as f:
+                f.truncate()
+            return f"{number} successfully reset.", status.OK
+        return render_template("api_help.jinja", message="Number missing."), status.BAD_REQUEST
 
-            if user is None and number_ is not None and index is None and amount is None:
-                with open(path, "w") as f:
-                    f.truncate()
-                return f"{number_} successfully reset.", status.OK
-
-        return render_template("api_help.jinja", message="No valid input found."), status.BAD_REQUEST
+    @app.get('/api/download')
+    def download_file():
+        number = request.args.get("number")
+        check = check_is_known_number(number)
+        if check.is_err:
+            return render_template("api_help.jinja", message="Number missing."), status.BAD_REQUEST
+        path = app.config[CONFIG_TXT_PATH_MAPPING[number]]
+        if os.path.exists(path):
+            return send_file(path, as_attachment=True), status.OK
+        return "File not found", status.NOT_FOUND
 
     @app.route('/')
     def homepage():
@@ -212,16 +265,6 @@ def create_app(storage_folder="./db/"):
     @app.route('/digits')
     def digits_ajax_view():
         return render_template("digits.jinja"), status.OK
-
-    @app.get('/digits/<number_name>')
-    def download_file(number_name):
-        check = check_is_known_number(number_name)
-        if check.is_err:
-            return create_text_with_link_response(check.err_message, check.err_status)
-        path = app.config[CONFIG_TXT_PATH_MAPPING[number_name]]
-        if os.path.exists(path):
-            return send_file(path, as_attachment=True), status.OK
-        return "File not found", status.NOT_FOUND
 
     @app.route('/toggle_theme')
     def toggle_theme():
@@ -266,7 +309,7 @@ def create_app(storage_folder="./db/"):
 
         check = check_username_legal(username)
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
 
         try:
             db_create_user(conn, username, password)
@@ -286,10 +329,10 @@ def create_app(storage_folder="./db/"):
         try:
             check = check_user_exists(username)
             if check.is_err:
-                return check.err_message, check.err_status
+                return check.message, check.status
             check = check_password(username, password)
             if check.is_err:
-                return check.err_message, check.err_status
+                return check.message, check.status
 
             db_delete_user(conn, username)
             session.pop('username', None)
@@ -301,7 +344,7 @@ def create_app(storage_folder="./db/"):
     def number_digits_view(num, index):
         check = check_is_known_number(num)
         if check.is_err:
-            return create_text_with_link_response(check.err_message, check.err_message)
+            return create_text_with_link_response(check.message, check.message)
         return get_digit_from_number_digits(conn, CLASS_MAPPING[num], index), status.OK
 
     @app.route('/admin')
@@ -309,7 +352,7 @@ def create_app(storage_folder="./db/"):
         username = session.get("username")
         check = check_user_is_admin(username)
         if check.is_err:
-            return create_text_with_link_response(check.err_message, check.err_status)
+            return create_text_with_link_response(check.message, check.status)
 
         users_and_indices, numbers_and_indices = db_get_user_data_for_admin_panel(conn)
         users, ranks = zip(*users_and_indices)
@@ -327,7 +370,7 @@ def create_app(storage_folder="./db/"):
         username = session.get("username")
         check = check_user_is_admin(username)
         if check.is_err:
-            return create_text_with_link_response(check.err_message, check.err_status)
+            return create_text_with_link_response(check.message, check.status)
 
         user = request.args.get("user")
         if db_get_rank(conn, user) == "admin":
@@ -341,7 +384,7 @@ def create_app(storage_folder="./db/"):
     def admin_get_all_users():
         check = check_user_is_admin(auth.current_user())
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
 
         users = db_get_all_user_names(conn)
         return users, status.OK
@@ -351,14 +394,14 @@ def create_app(storage_folder="./db/"):
     def admin_add_user():
         check = check_user_is_admin(auth.current_user())
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
         check = check_request_is_json(request)
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
         data = request.get_json()
         check = check_username_legal(data["username"])
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
         try:
             db_create_user(conn, data["username"], data["password"])
             return data["username"], status.CREATED
@@ -370,13 +413,13 @@ def create_app(storage_folder="./db/"):
     def admin_change_password(user):
         check = check_user_exists(user)
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
         check = check_user_is_admin(auth.current_user())
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
         check = check_request_is_json(request)
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
 
         data = request.get_json()
 
@@ -391,7 +434,7 @@ def create_app(storage_folder="./db/"):
     def admin_reset_all_indices():
         check = check_user_is_admin(auth.current_user())
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
 
         db_reset_all_current_indices(conn)
         return "All indices are reset.", status.OK
@@ -401,10 +444,10 @@ def create_app(storage_folder="./db/"):
     def admin_delete_user(user):
         check = check_user_exists(user)
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
         check = check_user_is_admin(auth.current_user())
         if check.is_err:
-            return check.err_message, check.err_status
+            return check.message, check.status
 
         db_delete_user(conn, user)
         return {}, status.OK

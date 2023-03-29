@@ -62,10 +62,10 @@ def test_only_admin_can_delete_test_user(client_with_test_user):
 def test_admin_can_reset_all_user_indices(client_with_test_user):
     client = client_with_test_user
 
-    client.get(f"api?number=pi", auth=TEST_USER_STD)
-    client.get(f"api?number=e", auth=TEST_USER_STD)
-    client.get(f"api?number=sqrt2", auth=("test_user", "test_password"))
+    client.get(f"api/user?number=pi", auth=TEST_USER_STD)
+    client.get(f"api/user?number=e", auth=TEST_USER_STD)
+    client.get(f"api/user?number=sqrt2", auth=("test_user", "test_password"))
     assert client.delete("admin/reset_all_indices", auth=TEST_USER_ADMIN).status_code == status.OK
-    assert client.get(f"api?number=pi", auth=TEST_USER_STD).data == PI_FIRST_10
-    assert client.get(f"api?number=e", auth=TEST_USER_STD).data == E_FIRST_10
-    assert client.get(f"api?number=sqrt2", auth=("test_user", "test_password")).data == SQRT2_FIRST_10
+    assert client.get(f"api/user?number=pi", auth=TEST_USER_STD).data == PI_FIRST_10
+    assert client.get(f"api/user?number=e", auth=TEST_USER_STD).data == E_FIRST_10
+    assert client.get(f"api/user?number=sqrt2", auth=("test_user", "test_password")).data == SQRT2_FIRST_10
