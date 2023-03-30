@@ -32,6 +32,8 @@ def create_app(storage_folder="./db/"):
     app.config[CONFIG_PI_TXT_PATH] = Path(storage_folder) / "pi.txt"
     app.config[CONFIG_E_TXT_PATH] = Path(storage_folder) / "e.txt"
     app.config[CONFIG_SQRT2_TXT_PATH] = Path(storage_folder) / "sqrt2.txt"
+    txt_path_mapping = {Pi.name: app.config[CONFIG_PI_TXT_PATH], E.name: app.config[CONFIG_E_TXT_PATH],
+                        Sqrt2.name: app.config[CONFIG_SQRT2_TXT_PATH]}
     app.config["SECRET_KEY"] = "PiThon"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
     app.config["SESSION_TYPE"] = "sqlalchemy"
@@ -45,10 +47,6 @@ def create_app(storage_folder="./db/"):
 
     create_db_tables(app.config[CONFIG_DB_PATH])
     conn = create_connection(app.config[CONFIG_DB_PATH])
-
-    number_configs = [(Pi, app.config[CONFIG_PI_TXT_PATH]),
-                      (E, app.config[CONFIG_E_TXT_PATH]),
-                      (Sqrt2, app.config[CONFIG_SQRT2_TXT_PATH])]
 
     def check_user_exists(user) -> Err:
         if not db_is_user_existing(conn, user):
@@ -87,18 +85,6 @@ def create_app(storage_folder="./db/"):
     def create_text_with_link_response(text, http_status, link_message="Continue", path=""):
         return f"""<p>{text}</p><br>
                    <a href=/{path}>{link_message}</a>""", http_status
-
-    def get_instance_from_number_name(number):
-        for numberClass, txt_filepath in number_configs:
-            if number == numberClass.name:
-                return numberClass()
-        return None
-
-    def get_txt_path_from_number_name(number):
-        for numberClass, txt_filepath in number_configs:
-            if number == numberClass.name:
-                return txt_filepath
-        return None
 
     def api_check_for_valid_user_auth_or_session():
         user = request.authorization.username if request.authorization is not None else None
@@ -150,7 +136,7 @@ def create_app(storage_folder="./db/"):
         if number is None or index_ is not None:
             return render_template("api_help.jinja", message="Unknown operation."), status.BAD_REQUEST
 
-        number_instance = get_instance_from_number_name(number)
+        number_instance = CLASS_MAPPING[number]()
 
         if amount is None:
             return number_instance.get_digits_for_user(user, 10, app.config[CONFIG_DB_PATH]), status.OK
@@ -170,8 +156,8 @@ def create_app(storage_folder="./db/"):
             return render_template("api_help.jinja"), status.BAD_REQUEST
 
         index, amount = api_str_to_int(index_, amount_)
-        number_instance = get_instance_from_number_name(number)
-        path = get_txt_path_from_number_name(number)
+        number_instance = CLASS_MAPPING[number]()
+        path = txt_path_mapping[number]
 
         if index is None:
             if amount is None:
@@ -231,7 +217,7 @@ def create_app(storage_folder="./db/"):
     @app.delete('/api')
     def api_reset_number():
         number = request.args.get("number")
-        path = get_txt_path_from_number_name(number)
+        path = txt_path_mapping[number]
         if number is not None:
             with open(path, "w") as f:
                 f.truncate()
