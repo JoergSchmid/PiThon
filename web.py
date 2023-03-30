@@ -91,7 +91,7 @@ def create_app(storage_folder="./db/"):
         if user is None:
             user = session.get("username")
             if user is None:
-                return None, Err(True, "No username given. Please log in or use auth.", status.NOT_FOUND)
+                return Err(True, "No username given. Please log in or use auth.", status.NOT_FOUND)
         elif not verify_password(user, request.authorization.password):
             return Err(True, "Wrong username or password.", status.NOT_FOUND)
         return Err(False, user, status.FOUND)
