@@ -17,7 +17,7 @@
     {% if session["username"] == null %} value="Login"
     {% else %} value="{{session['username']}}" {% endif %}>
 <input type="button" id="toggleDM" value="Toggle darkmode" onclick="toggleDarkMode()">
-{% if session["username"] == "joerg" %}
+{% if session["rank"] == "admin" %}
     <input type="button" id="adminPanel" value="Admin Panel" onclick="adminPanel()">
 {% endif %}
 
@@ -28,9 +28,9 @@
 <!-- Top navigation bar to other pages -->
 <div class="flex-container" id="navBar">
     <div><a href="/">Homepage</a></div>
-    <div><a href="digits_form">Digits Form</a></div>
-    <div><a href="digits_ajax">Digits AJAX</a></div>
+    <div><a href="digits">Digits</a></div>
     <div><a href="tic_tac_toe">Tic Tac Toe</a></div>
+    <div><a href="api">API doc</a></div>
 </div><br>
 
 <!-- Define functions to link to other pages -->
@@ -39,7 +39,10 @@
     navbar = document.getElementById("navBar");
 
     function toggleDarkMode() {
-        window.location.href = "../toggle_theme?current_page=" + window.location.pathname;
+        document.body.className = document.body.className == "dark-mode" ? "" : "dark-mode";
+        let r = new XMLHttpRequest();
+        r.open("GET", "../toggle_theme", false);
+        r.send(null);
     }
 
     function register() {

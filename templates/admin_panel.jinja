@@ -26,16 +26,16 @@
     const number_amount = number_list.length / user_list.length;
     const table = document.getElementById("user_table");
 
-    let text = "";
+    let table_content = "";
     for(let i in user_list) {
-        text += "<tr><td>" + user_list[i] + "</td><td><form method='POST' action='/admin/delete?user=" + user_list[i] + "'><input type='submit' value='Delete'></form><td>" + rank_list[i] + "</td>";
+        table_content += "<tr><td>" + user_list[i] + "</td><td><form method='POST' action='/admin/delete?user=" + user_list[i] + "'><input type='submit' value='Delete'></form><td>" + rank_list[i] + "</td>";
         for(let j = 0; j < number_amount; j++) {
-            text += "<td>" + index_list[i*number_amount+j] + "</td>";
+            table_content += "<td>" + index_list[i*number_amount+j] + "</td>";
         }
-        text += "</tr>";
+        table_content += "</tr>";
     }
-    text += "</tbody>";
-    table.innerHTML = text;
+    table_content += "</tbody>";
+    table.innerHTML = table_content;
 </script>
 
 {% endblock %}

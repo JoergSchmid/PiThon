@@ -3,8 +3,8 @@ import http
 import pytest
 from werkzeug.security import check_password_hash
 
-from database import TEST_USER_STD, TEST_USER_ADMIN, get_password, create_connection
-from test_irrational_number_endpoints import PI_FIRST_10, E_FIRST_10, SQRT2_FIRST_10
+from database import TEST_USER_STD, TEST_USER_ADMIN, db_get_password, create_connection
+from test_api import PI_FIRST_10, E_FIRST_10, SQRT2_FIRST_10
 from web import CONFIG_DB_PATH
 
 status = http.HTTPStatus
@@ -47,7 +47,7 @@ def test_only_admin_can_patch_new_password(app, client_with_test_user):
                         json={"password": "wrong_password"}).status_code == status.FORBIDDEN
     assert client.patch("/admin/users/test_user", auth=TEST_USER_ADMIN,
                         json={"password": "new_test_password"}).status_code == status.CREATED
-    assert check_password_hash(get_password(create_connection(app.config[CONFIG_DB_PATH]), "test_user"),
+    assert check_password_hash(db_get_password(create_connection(app.config[CONFIG_DB_PATH]), "test_user"),
                                "new_test_password")
 
 
@@ -62,10 +62,10 @@ def test_only_admin_can_delete_test_user(client_with_test_user):
 def test_admin_can_reset_all_user_indices(client_with_test_user):
     client = client_with_test_user
 
-    client.get(f"/pi/{TEST_USER_STD[0]}")
-    client.get(f"/e/{TEST_USER_ADMIN[0]}")
-    client.get(f"/sqrt2/test_user")
-    assert client.delete("/admin/reset_all_indices", auth=TEST_USER_ADMIN).status_code == status.OK
-    assert client.get(f"/pi/{TEST_USER_STD[0]}").data == PI_FIRST_10
-    assert client.get(f"/e/{TEST_USER_ADMIN[0]}").data == E_FIRST_10
-    assert client.get("/sqrt2/test_user").data == SQRT2_FIRST_10
+    client.get(f"api/user?number=pi", auth=TEST_USER_STD)
+    client.get(f"api/user?number=e", auth=TEST_USER_STD)
+    client.get(f"api/user?number=sqrt2", auth=("test_user", "test_password"))
+    assert client.delete("admin/reset_all_indices", auth=TEST_USER_ADMIN).status_code == status.OK
+    assert client.get(f"api/user?number=pi", auth=TEST_USER_STD).data == PI_FIRST_10
+    assert client.get(f"api/user?number=e", auth=TEST_USER_STD).data == E_FIRST_10
+    assert client.get(f"api/user?number=sqrt2", auth=("test_user", "test_password")).data == SQRT2_FIRST_10
