@@ -87,54 +87,51 @@ def create_app(storage_folder="./db/"):
         return f"""<p>{text}</p><br>
                    <a href=/{path}>{link_message}</a>""", http_status
 
-    def api_check_for_valid_user_auth_or_session():
+    def api_get_username():
         user = request.authorization.username if request.authorization is not None else None
         if user is None:
             user = session.get("username")
             if user is None:
-                return Err(True, "No username given. Please log in or use auth.", status.NOT_FOUND)
+                raise Error({"message": "No username given. Please log in or use auth.", "status": status.NOT_FOUND})
         elif not verify_password(user, request.authorization.password):
-            return Err(True, "Wrong username or password.", status.NOT_FOUND)
-        return Err(False, user, status.FOUND)
+            raise Error({"message": "Wrong username or password.", "status": status.NOT_FOUND})
+        return user
 
-    def api_check_for_valid_request_input(number, index, amount) -> Err:
+    def api_get_number():
+        number = request.args.get("number")
         if number is not None:
-            if number not in ["pi", "e", "sqrt2"]:
-                return Err(True, f"{number} is not a valid number.", status.NOT_FOUND)
+            if number not in CLASS_MAPPING.keys():
+                raise Error({"message": "Unknown number.", "status": status.NOT_FOUND})
+            return number
+        return None
 
+    def api_get_index():
+        index = request.args.get("index")
         if index is not None:
-            if not index.isnumeric() or int(index) < 0:
-                return Err(True, f"{index} is not a valid index.", status.BAD_REQUEST)
+            if not index.isnumeric or int(index) < 0:
+                raise Error({"message": "Invalid index.", "status": status.BAD_REQUEST})
+            return int(index)
+        return None
 
+    def api_get_amount():
+        amount = request.args.get("amount")
         if amount is not None:
-            if not amount.isnumeric() or int(amount) < 0:
-                return Err(True, f"{amount} is not a valid amount.", status.BAD_REQUEST)
-
-        return Err(False, "", status.OK)
-
-    def api_str_to_int(var1, var2):
-        out1 = int(var1) if var1 is not None else None
-        out2 = int(var2) if var2 is not None else None
-        return out1, out2
+            if not amount.isnumeric or int(amount) < 0:
+                raise Error({"message": "Invalid amount.", "status": status.BAD_REQUEST})
+            return int(amount)
+        return None
 
     @app.get('/api/user')
     def api_get_number_with_user():
-        check = api_check_for_valid_user_auth_or_session()
-        if check.is_err:
-            return render_template("api_help.jinja", message=check.message), check.status
-        user = check.message
+        try:
+            user = api_get_username()
+            number = api_get_number()
+            index = api_get_index()
+            amount = api_get_amount()
+        except Error as err:
+            return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
 
-        number = request.args.get("number")
-        index_ = request.args.get("index")
-        amount_ = request.args.get("amount")
-
-        check = api_check_for_valid_request_input(number, index_, amount_)
-        if check.is_err:
-            return render_template("api_help.jinja", message=check.message), check.status
-
-        index, amount = api_str_to_int(index_, amount_)
-
-        if number is None or index_ is not None:
+        if number is None or index is not None:
             return render_template("api_help.jinja", message="Unknown operation."), status.BAD_REQUEST
 
         number_instance = CLASS_MAPPING[number]()
@@ -145,18 +142,16 @@ def create_app(storage_folder="./db/"):
 
     @app.get('/api')
     def api_get_number_without_user():
-        number = request.args.get("number")
-        index_ = request.args.get("index")
-        amount_ = request.args.get("amount")
-
-        check = api_check_for_valid_request_input(number, index_, amount_)
-        if check.is_err:
-            return render_template("api_help.jinja", message=check.message), check.status
+        try:
+            number = api_get_number()
+            index = api_get_index()
+            amount = api_get_amount()
+        except Error as err:
+            return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
 
         if number is None:
             return render_template("api_help.jinja"), status.BAD_REQUEST
 
-        index, amount = api_str_to_int(index_, amount_)
         number_instance = CLASS_MAPPING[number]()
         path = txt_path_mapping[number]
 
@@ -171,17 +166,12 @@ def create_app(storage_folder="./db/"):
 
     @app.post('/api/user')
     def api_post_set_user_index():
-        check = api_check_for_valid_user_auth_or_session()
-        if check.is_err:
-            return render_template("api_help.jinja", message=check.message), check.status
-        user = check.message
-
-        number = request.args.get("number")
-        index = request.args.get("index")
-
-        check = api_check_for_valid_request_input(number, index, None)
-        if check.is_err:
-            return render_template("api_help.jinja", message=check.message), check.status
+        try:
+            user = api_get_username()
+            number = api_get_number()
+            index = api_get_index()
+        except Error as err:
+            return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
 
         if number is None or index is None:
             return render_template("api_help.jinja", message="Unknown request."), status.BAD_REQUEST
@@ -204,10 +194,10 @@ def create_app(storage_folder="./db/"):
 
     @app.delete('/api/user')
     def api_delete_user():
-        check = api_check_for_valid_user_auth_or_session()
-        if check.is_err:
-            return render_template("api_help.jinja", message=check.message), check.status
-        user = check.message
+        try:
+            user = api_get_username()
+        except Error as err:
+            return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
         req = request.get_json() if request.is_json else None
 
         if req is None or not req["confirm_deletion"]:
@@ -217,7 +207,10 @@ def create_app(storage_folder="./db/"):
 
     @app.delete('/api')
     def api_reset_number():
-        number = request.args.get("number")
+        try:
+            number = api_get_number()
+        except Error as err:
+            return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
         path = txt_path_mapping[number]
         if number is not None:
             with open(path, "w") as f:
@@ -227,10 +220,10 @@ def create_app(storage_folder="./db/"):
 
     @app.get('/api/download')
     def download_file():
-        number = request.args.get("number")
-        check = check_is_known_number(number)
-        if check.is_err:
-            return render_template("api_help.jinja", message="Number missing."), status.BAD_REQUEST
+        try:
+            number = api_get_number()
+        except Error as err:
+            return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
         path = app.config[CONFIG_TXT_PATH_MAPPING[number]]
         if os.path.exists(path):
             return send_file(path, as_attachment=True), status.OK
