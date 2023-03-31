@@ -92,16 +92,16 @@ def create_app(storage_folder="./db/"):
         if user is None:
             user = session.get("username")
             if user is None:
-                raise Error({"message": "No username given. Please log in or use auth.", "status": status.NOT_FOUND})
+                raise RuntimeError({"message": "No username given. Please log in or use auth.", "status": status.NOT_FOUND})
         elif not verify_password(user, request.authorization.password):
-            raise Error({"message": "Wrong username or password.", "status": status.NOT_FOUND})
+            raise RuntimeError({"message": "Wrong username or password.", "status": status.NOT_FOUND})
         return user
 
     def api_get_number():
         number = request.args.get("number")
         if number is not None:
             if number not in CLASS_MAPPING.keys():
-                raise Error({"message": "Unknown number.", "status": status.NOT_FOUND})
+                raise RuntimeError({"message": "Unknown number.", "status": status.NOT_FOUND})
             return number
         return None
 
@@ -109,7 +109,7 @@ def create_app(storage_folder="./db/"):
         index = request.args.get("index")
         if index is not None:
             if not index.isnumeric or int(index) < 0:
-                raise Error({"message": "Invalid index.", "status": status.BAD_REQUEST})
+                raise RuntimeError({"message": "Invalid index.", "status": status.BAD_REQUEST})
             return int(index)
         return None
 
@@ -117,7 +117,7 @@ def create_app(storage_folder="./db/"):
         amount = request.args.get("amount")
         if amount is not None:
             if not amount.isnumeric or int(amount) < 0:
-                raise Error({"message": "Invalid amount.", "status": status.BAD_REQUEST})
+                raise RuntimeError({"message": "Invalid amount.", "status": status.BAD_REQUEST})
             return int(amount)
         return None
 
@@ -128,7 +128,7 @@ def create_app(storage_folder="./db/"):
             number = api_get_number()
             index = api_get_index()
             amount = api_get_amount()
-        except Error as err:
+        except RuntimeError as err:
             return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
 
         if number is None or index is not None:
@@ -146,7 +146,7 @@ def create_app(storage_folder="./db/"):
             number = api_get_number()
             index = api_get_index()
             amount = api_get_amount()
-        except Error as err:
+        except RuntimeError as err:
             return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
 
         if number is None:
@@ -170,7 +170,7 @@ def create_app(storage_folder="./db/"):
             user = api_get_username()
             number = api_get_number()
             index = api_get_index()
-        except Error as err:
+        except RuntimeError as err:
             return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
 
         if number is None or index is None:
@@ -196,7 +196,7 @@ def create_app(storage_folder="./db/"):
     def api_delete_user():
         try:
             user = api_get_username()
-        except Error as err:
+        except RuntimeError as err:
             return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
         req = request.get_json() if request.is_json else None
 
@@ -209,7 +209,7 @@ def create_app(storage_folder="./db/"):
     def api_reset_number():
         try:
             number = api_get_number()
-        except Error as err:
+        except RuntimeError as err:
             return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
         path = txt_path_mapping[number]
         if number is not None:
@@ -222,7 +222,7 @@ def create_app(storage_folder="./db/"):
     def download_file():
         try:
             number = api_get_number()
-        except Error as err:
+        except RuntimeError as err:
             return render_template("api_help.jinja", message=err.args.index("message")), err.args.index("status")
         path = app.config[CONFIG_TXT_PATH_MAPPING[number]]
         if os.path.exists(path):
