@@ -17,6 +17,7 @@ CONFIG_SQRT2_TXT_PATH = "SQRT2_TXT_PATH"
 
 CONFIG_TXT_PATH_MAPPING = {Pi.name: CONFIG_PI_TXT_PATH, E.name: CONFIG_E_TXT_PATH, Sqrt2.name: CONFIG_SQRT2_TXT_PATH}
 CLASS_MAPPING = {Pi.name: Pi, E.name: E, Sqrt2.name: Sqrt2}
+STD_DIGIT_AMOUNT = 10
 
 Err = namedtuple("Err", ["is_err", "message", "status"], defaults=None)
 
@@ -139,7 +140,7 @@ def create_app(storage_folder="./db/"):
         number_instance = CLASS_MAPPING[number]()
 
         if amount is None:
-            return number_instance.get_digits_for_user(user, 10, app.config[CONFIG_DB_PATH]), status.OK
+            return number_instance.get_digits_for_user(user, STD_DIGIT_AMOUNT, app.config[CONFIG_DB_PATH]), status.OK
         return number_instance.get_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK
 
     @app.get('/api')
