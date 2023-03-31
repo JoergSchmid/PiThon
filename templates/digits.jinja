@@ -37,21 +37,21 @@
 
     function onOneDigitButtonClick() {
       if (indexInput.value >= 0)
-        indexOutput.innerHTML = httpReq(window.location.origin + "/api?number=" + numberName.value + "&index=" + indexInput.value);
+        indexOutput.innerHTML = httpReq("/api?number=" + numberName.value + "&index=" + indexInput.value);
     }
 
     function onSubmitButtonClick() {
       if (append.checked)
-        numberOutput.innerHTML += httpReq(window.location.origin + "/api?number=" + numberName.value + "&amount=10" {% if session['username'] != null %} + "&session=true" {% endif %});
+        numberOutput.innerHTML += httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value);
       else
-        numberOutput.innerHTML = httpReq(window.location.origin + "/api?number=" + numberName.value + "&amount=10" {% if session['username'] != null %} + "&session=true" {% endif %});
+        numberOutput.innerHTML = httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value);
     }
 
     function onResetButtonClick() {
       {% if session['username'] == null %}
-        httpReq(window.location.origin + "/api?number=" + numberName.value, method="DELETE");
+        httpReq("api?number=" + numberName.value, method="DELETE");
       {% else %}
-        httpReq(window.location.origin + "/api?number=" + numberName.value + "&session=true", method="DELETE")
+        httpReq("api/user?number=" + numberName.value + "&index=0", method="POST")
       {% endif %}
       numberOutput.innerHTML = "";
     }
