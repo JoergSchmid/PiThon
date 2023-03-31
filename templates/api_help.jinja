@@ -14,19 +14,15 @@
 <h4><b>GET</b> request <b>without</b> user:</h4>
 <ul>
     <li>You always have to provide <b>?number</b>, like "/api?number=pi". This url will show all progress of that number.</li>
-    <li>Adding <b>&index</b> and/or <b>&amount</b> (default 10) will show specific parts of the number.</li>
+    <li>Adding <b>&index</b> and/or <b>&amount</b> will show specific parts of the number.</li>
     <li>Not providing an <b>&index</b> will get you on the global progress, saved in a txt file.</li>
     <li>This txt file can be downloaded on <b>/api/download?number=</b></li>
 </ul><br>
 <h4><b>GET</b> request <b>with</b> user:</h4>
 <ul>
     <li>When a user is given, you can use this request to progress on your own profile.</li>
-    <li>You have to provide the <b>?number</b> name and can add an <b>&amount</b> (default 10), but thats it. No indexing possible.</li>
-
-    <li>Create a new user with a <b>POST</b> request: Do not user url-parameters, instead user <b>JSON</b> to send a "username" and a "password".</li>
-    <li><b>DELETE</b> a user by sending that users <b>auth</b> and use <b>JSON</b> to send "confirm_deletion" set as true.</li>
-    <li>Set a users index to a certain value by <b>POST</b>ing with <b>number</b> and <b>index</b> parameters.</li>
-    <li>Alternatively, you can use <b>DELETE</b> and <b>number</b> to reset a number to 0. With <b>auth</b>, for that user, without you reset the global progress.</li>
+    <li>You have to provide the <b>?number</b> name and can add an <b>&amount</b>, but thats it. No indexing possible.</li>
+    <li>Only give the parameter <b>?number</b> to get all current progress.</li>
 </ul>
 <h4><b>POST</b> request <b>without</b> user:</h4>
 <ul>
