@@ -1,0 +1,72 @@
+{% extends 'base.jinja' %}
+
+{% block title %}Digits{% endblock %}
+
+{% block content %}
+
+<div class="ctr">
+  <h2>AJAX digits</h2>
+
+  <label for="number_selection">Select your number: </label>
+  <select name="number_selection" id="number_selection" onchange="numberOutput.innerHTML=''">
+    <option value="pi" selected>Pi</option>
+    <option value="e">e</option>
+    <option value="sqrt2">Sqrt2</option>
+  </select><br><br>
+
+<!-- One digit -->
+  <input type="button" id="oneDigit" name="oneDigit" value="One digit at" onclick="onOneDigitButtonClick()">
+  <input type="number" id="indexInput" name="indexInput" value="0" style="width: 100px;">
+  <output id="indexOutput" name="indexOutput" style="font-size: larger;"></output><br>
+
+<!-- 10 digits, with progress, and user dependend -->
+  <input type="button" id="submit" name="submit" value="Submit" onclick="onSubmitButtonClick()">
+  <input type="button" id="showAll" name="showAll" value="Show all progress" onclick="onShowAllButtonClick()">
+  <input type="button" id="clear" name="clear" value="Clear" onclick="numberOutput.innerHTML = ''">
+  <input type="button" id="reset" name="reset" value="Reset" onclick="onResetButtonClick()">
+  <input type="checkbox" name="append" id="append" value="append">
+  <label for="append">Append</label><br>
+  <output id="numberOutput" name="numberOutput" style="font-size: larger"></output>
+
+  <script>
+    const indexInput = document.getElementById("indexInput");
+    const indexOutput = document.getElementById("indexOutput");
+    const numberOutput = document.getElementById("numberOutput");
+    const numberName = document.getElementById("number_selection");
+    const append = document.getElementById("append");
+
+    function onOneDigitButtonClick() {
+      if (indexInput.value >= 0)
+        indexOutput.innerHTML = httpReq("/api?number=" + numberName.value + "&index=" + indexInput.value);
+    }
+
+    function onSubmitButtonClick() {
+      if (append.checked)
+        numberOutput.innerHTML += httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value + "&amount=10");
+      else
+        numberOutput.innerHTML = httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value + "&amount=10");
+    }
+
+    function onResetButtonClick() {
+      {% if session['username'] == null %}
+        httpReq("api?number=" + numberName.value, method="DELETE");
+      {% else %}
+        httpReq("api/user?number=" + numberName.value + "&index=0", method="POST")
+      {% endif %}
+      numberOutput.innerHTML = "";
+    }
+
+    function onShowAllButtonClick() {
+      numberOutput.innerHTML = httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value);
+    }
+
+    function httpReq(url, method="GET") {
+      let r = new XMLHttpRequest();
+      r.open(method, url, false);
+      r.send(null);
+      return r.responseText;
+    }
+  </script>
+  </div>
+
+{% endblock %}

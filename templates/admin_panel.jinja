@@ -1,0 +1,41 @@
+{% extends 'base.jinja' %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+
+<!-- Create a table of all users -->
+<div class="ctr">
+    <table class="ctr" style="text-align: right;">
+        <thead>
+            <th>User</th>
+            <th>Delete?</th>
+            <th>Rank</th>
+            <th>pi</th>
+            <th>e</th>
+            <th>sqrt(2)</th>
+        </thead>
+        <tbody id="user_table"></tbody>
+    </table>
+</div>
+<script>
+    const user_list = {{user_list}};
+    const rank_list = {{rank_list}};
+    const number_list = {{number_list}};
+    const index_list = {{index_list}};
+    const number_amount = number_list.length / user_list.length;
+    const table = document.getElementById("user_table");
+
+    let table_content = "";
+    for(let i in user_list) {
+        table_content += "<tr><td>" + user_list[i] + "</td><td><form method='POST' action='/admin/delete?user=" + user_list[i] + "'><input type='submit' value='Delete'></form><td>" + rank_list[i] + "</td>";
+        for(let j = 0; j < number_amount; j++) {
+            table_content += "<td>" + index_list[i*number_amount+j] + "</td>";
+        }
+        table_content += "</tr>";
+    }
+    table_content += "</tbody>";
+    table.innerHTML = table_content;
+</script>
+
+{% endblock %}

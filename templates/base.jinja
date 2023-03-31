@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>{% block title %} {% endblock %} - PiThon</title>
@@ -7,31 +8,71 @@
     <link rel="stylesheet" href="../static/css/main.css">
     <link rel="icon" type="image" href="../static/images/favicon.ico">
 </head>
-<body>
 
+
+<body {% if session["theme"] == "dark" %} class="dark-mode" {% endif %}>
+
+<!-- Top Left buttons -->
+<input type="button" id="btn_profile"  onclick="profile()"
+    {% if session["username"] == null %} value="Login"
+    {% else %} value="{{session['username']}}" {% endif %}>
 <input type="button" id="toggleDM" value="Toggle darkmode" onclick="toggleDarkMode()">
-<script>
-    btn_dm = document.getElementById("toggleDM");
-    navbar = document.getElementById("flexboxContainer");
+{% if session["rank"] == "admin" %}
+    <input type="button" id="adminPanel" value="Admin Panel" onclick="adminPanel()">
+{% endif %}
 
-    function toggleDarkMode() {
-        document.body.classList.toggle("dark-mode");
-        //navbar.style.backgroundColor = "darkgrey";
-    }
-</script>
-
+<!-- Top Text/description -->
 <h1>PiThon</h1>
 <p style="text-align: center">A simple web application for displaying digits of irrational numbers</p>
 
-<div class="flex-container" id="flexContainer">
+<!-- Top navigation bar to other pages -->
+<div class="flex-container" id="navBar">
     <div><a href="/">Homepage</a></div>
-    <div><a href="digits_form">Digits Form</a></div>
-    <div><a href="digits_ajax">Digits AJAX</a></div>
+    <div><a href="digits">Digits</a></div>
     <div><a href="tic_tac_toe">Tic Tac Toe</a></div>
+    <div><a href="api">API doc</a></div>
 </div><br>
+
+<!-- Define functions to link to other pages -->
+<script>
+    btn_dm = document.getElementById("toggleDM");
+    navbar = document.getElementById("navBar");
+
+    function toggleDarkMode() {
+        document.body.className = document.body.className == "dark-mode" ? "" : "dark-mode";
+        let r = new XMLHttpRequest();
+        r.open("GET", "../toggle_theme", false);
+        r.send(null);
+    }
+
+    function register() {
+        window.location.href = "../register?current_page=" + window.location.pathname;
+    }
+
+    function login() {
+        window.location.href = "../login?current_page=" + window.location.pathname;
+    }
+
+    function logout() {
+        window.location.href = "../logout?current_page=" + window.location.pathname;
+    }
+
+    function profile() {
+        window.location.href = "../profile";
+    }
+
+    function delete_user() {
+        window.location.href = "../delete";
+    }
+
+    function adminPanel() {
+        window.location.href = "../admin";
+    }
+</script>
 
 {% block content %} {% endblock %}
 
+<!-- Footer including authors and a link to github page -->
 <footer>
     <p>Authors: Joerg Schmid, Felix Scholl</p>
     <h6><a href="https://github.com/FelixFifi/PiThon">

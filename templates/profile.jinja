@@ -1,0 +1,41 @@
+{% extends 'base.jinja' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+
+<div class="ctr">
+    {% if session["username"] == null %}
+    <form action='/login?current_page=profile' method='POST'>
+        <input type='text' name='username' placeholder="Name"><br>
+        <input type='password' name='password' placeholder="Password"><br>
+        <input type='submit' value='Login'>
+    </form><br><br>
+    <form class='ctr' action='/register?current_page=profile' method='POST'>
+        <input type='text' name='username' placeholder="Name"><br>
+        <input type='password' name='password' id="pwd" placeholder="Password"><br>
+        <input type='password' name='confirm_password' id="confirm" placeholder="Confirm Password"><br>
+        <input type='submit' value='Register'>
+    </form>
+    {% else %}
+    <p>Logged in as {{session["username"]}}</p>
+    <input type="button" id="btn_logout" value="Logout" onclick="logout()">
+    <input type="button" id="btn_delete" value="Delete account" onclick="delete_user()">
+    {% endif %}
+    
+    <script>
+        const pwd = document.getElementById("pwd");
+        const confirm = document.getElementById("confirm");
+
+        confirm.onkeyup = function() {
+            if (pwd.value !== confirm.value) {
+                confirm.style = "color: red;";
+            } else {
+                confirm.style = "color: black;";
+            }
+        }
+    </script>
+</div>
+
+
+{% endblock %}
