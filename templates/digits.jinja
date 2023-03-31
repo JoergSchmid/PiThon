@@ -42,9 +42,9 @@
 
     function onSubmitButtonClick() {
       if (append.checked)
-        numberOutput.innerHTML += httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value);
+        numberOutput.innerHTML += httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value + "&amount=10");
       else
-        numberOutput.innerHTML = httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value);
+        numberOutput.innerHTML = httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value + "&amount=10");
     }
 
     function onResetButtonClick() {
@@ -57,7 +57,7 @@
     }
 
     function onShowAllButtonClick() {
-      numberOutput.innerHTML = httpReq(window.location.origin + "/api?number=" + numberName.value {% if session['username'] != null %} + "&session=true" {% endif %});
+      numberOutput.innerHTML = httpReq("api" {% if session['username'] != null %} + "/user" {% endif %} + "?number=" + numberName.value);
     }
 
     function httpReq(url, method="GET") {

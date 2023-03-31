@@ -137,7 +137,7 @@ def create_app(storage_folder="./db/"):
         number_instance = CLASS_MAPPING[number]()
 
         if amount is None:
-            return number_instance.get_digits_for_user(user, STD_DIGIT_AMOUNT, app.config[CONFIG_DB_PATH]), status.OK
+            return number_instance.get_digits(0, db_get_current_index(conn, user, number)), status.OK
         return number_instance.get_digits_for_user(user, amount, app.config[CONFIG_DB_PATH]), status.OK
 
     @app.get('/api')
