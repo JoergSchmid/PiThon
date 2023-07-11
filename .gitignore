@@ -134,4 +134,10 @@ dmypy.json
 
 # Generated files
 pi.txt
+e.txt
+sqrt.txt
+db/*.txt
+test/*_TXT_PATH
+.vscode
 db/pi.db
+pithon.db
