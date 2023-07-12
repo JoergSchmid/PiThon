@@ -1,3 +1,9 @@
 Dockerfile
 .dockerignore
 .gitignore
+test
+instance
+.vscode
+.pytest_cache
+venv
+db
