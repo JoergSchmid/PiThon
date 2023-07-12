@@ -1,5 +1,5 @@
 services:
   pithon:
-    image: pithon:test
+    image: pithon:1.0.0
     ports:
       - 5000:5000
