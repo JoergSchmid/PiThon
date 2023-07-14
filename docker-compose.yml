@@ -1,5 +1,10 @@
 services:
   pithon:
     image: pithon:1.0.0
+    volumes:
+      - pithon-volume:/app/db/
     ports:
       - 5000:5000
+
+volumes:
+  pithon-volume:
