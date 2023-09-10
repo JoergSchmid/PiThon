@@ -1,6 +1,6 @@
 services:
   pithon:
-    image: pithon:1.0.0
+    image: pithon
     volumes:
       - pithon-volume:/app/db/
     ports:
